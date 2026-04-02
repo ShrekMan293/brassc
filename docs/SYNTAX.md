@@ -570,7 +570,7 @@ using codegen::ir;
 using codegen::asm;
 ```
 
-TODO: Modules can be explained more in PROJECTS.md
+***Modules are explained more in [USAGE.md](USAGE.md)***
 
 ## Final Overview
 Brass is a large and only growing language. Here is a full list of keywords and where to find them:
