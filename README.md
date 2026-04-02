@@ -14,3 +14,14 @@
 *To see authors and contributors:* **[CLICK HERE](docs/AUTHORS.md)**
 
 If you'd like to contribute to Brass, I unfortunately do not have any opportunities as Brass is in development, but I plan on opening that ***ASAP***.
+
+
+## Attribution
+
+Brass is originally developed by Mister keyboard
+
+While the MIT License allows broad reuse, you may not misrepresent this software as your own original work.
+
+Contributions made by others remain the intellectual property of their respective authors, and proper credit should be given where applicable.
+
+Proper credit must be given in derived projects.
