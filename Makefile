@@ -27,5 +27,5 @@ run:
 
 git:
 	git add .
-	git commit -m $(COMMIT)
+	git commit -m '$(ARGS)'
 	git push
