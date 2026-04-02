@@ -24,3 +24,8 @@ build:
 
 run:
 	$(EXE) $(ARGS)
+
+git:
+	git add .
+	git commit -m $(COMMIT)
+	git push
