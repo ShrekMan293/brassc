@@ -68,6 +68,8 @@ int     | Stack | s32       |Signed 32 bit integer          |
 uint    | Stack | u32       |Unsigned 32 bit integer        |
 long    | Stack | s32       |Signed 32 bit integer          |
 ulong   | Stack | u64       |Unsigned 64 bit integer        |
+float   | Stack | f32       |32 bit floating point number   |
+double  | Stack | f64       |64 bit floating point number   |
 
 ### Custom Types
 There are **three** types of custom types in Brass:
@@ -268,6 +270,13 @@ type String from List<Char> {
 }
 ```
 
+To prevent derivatives:
+```
+type sealed String from List<Char> {
+
+}
+```
+
 To override a function:
 ```
 fn override ToString(fmt -> string = "") {
@@ -275,7 +284,7 @@ fn override ToString(fmt -> string = "") {
 }
 ```
 
-Or:
+To implement abstract types:
 ```
 type abstract Container<T> {
 
@@ -323,7 +332,7 @@ var tony -> Life* = new Life;
 The entry point of an implementation is a constructor:
 ```
 impl Life throws InvalidOperation, ArgumentException -> s32 {
-    Life(Person father, Person mother) {
+    Life(father -> Person, mother -> Person) {
 
     }
 }
@@ -351,7 +360,7 @@ fn <T> Print(arg -> T) {
 ## Operator Overloading
 A select group of operators can be overloaded using the syntax:
 ```
-String operator +(char c) {
+operator String +(char c) {
     
 }
 ```
@@ -587,15 +596,16 @@ u64         |[Types](#types)                |foreach    |[Loops](#foreach-loop) 
 s64         |[Types](#types)                |break      |[Loops](#breakcontinue)            |comptime   |[Modifiers](#variable-modifiers)   |
 f32         |[Types](#types)                |continue   |[Loops](#breakcontinue)            |from       |[Polymorphism](#polymorphism)      |
 f64         |[Types](#types)                |switch     |[Switch](#switch-block)            |override   |[Polymorphism](#polymorphism)      |
-char        |[Types](#types)                |case       |[Switch](#switch-block)            |abstract   |[Polymorphism](#polymorphism)      |
+char        |[Types](#types)                |case       |[Switch](#switch-block)            |abstract   |[Oops, duplicate](#polymorphism)   |
 bool        |[Types](#types)                |default    |[Switch](#switch-block)            |new        |[Memory](#memory)                  |
 byte        |[Types](#types)                |return     |[Returns](#return)                 |delete     |[Memory](#memory)                  |
 int         |[Types](#types)                |public     |[Visibility](#visibility-modifiers)|operator   |[Operators](#operator-overloading) |
 uint        |[Types](#types)                |protected  |[Visibility](#visibility-modifiers)|try        |[Try-Catch](#exceptions)           |
 long        |[Types](#types)                |internal   |[Visibility](#visibility-modifiers)|catch      |[Try-Catch](#exceptions)           |
 ulong       |[Types](#types)                |local      |[Visibility](#visibility-modifiers)|finally    |[Try-Catch](#exceptions)           |
-type        |[Custom Types](#custom-types)  |private    |[Visibility](#visibility-modifiers)|throw      |[Exceptions](#exceptions)          |
-enum        |[Custom Types](#custom-types)  |inline     |[Modifiers](#function-modifiers)   |throws     |[Exceptions](#exceptions)          |
-exception   |[Custom Types](#custom-types)  |cdecl      |[Modifiers](#function-modifiers)   |using      |[Modules](#modules)                |
-null        |[Null Types](#null)            |and        |[Operators](#operators)            |or         |[Operators](#operators)            |
-is          |[Operators](#operators)        |typeof     |[Operators](#operators)            |impl       |[Implementations](#implementations)|
+float       |[Types](#types)                |private    |[Visibility](#visibility-modifiers)|throw      |[Exceptions](#exceptions)          |
+double      |[Types](#types)                |inline     |[Modifiers](#function-modifiers)   |throws     |[Exceptions](#exceptions)          |
+type        |[Custom Types](#custom-types)  |cdecl      |[Modifiers](#function-modifiers)   |using      |[Modules](#modules)                |
+enum        |[Custom Types](#custom-types)  |and        |[Operators](#operators)            |or         |[Operators](#operators)            |
+exception   |[Custom Types](#custom-types)  |typeof     |[Operators](#operators)            |impl       |[Implementations](#implementations)|
+is          |[Operators](#operators)        |null       |[Null Types](#null)                |self       |[Methods](#methods)                |

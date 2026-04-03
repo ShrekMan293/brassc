@@ -4,7 +4,7 @@ rwildcard = $(foreach d,$(wildcard $(1)*),$(call rwildcard,$(d)/,$(2)) $(filter 
 # Usage: Find all .c files in the 'src' directory and its subdirectories
 SRCFILES := $(call rwildcard, src/, *.cpp)
 COMPILER := g++
-CFLAGS := -Wall -Wextra -O3 -std=c++20 
+CFLAGS := -Wall -Wextra -O3 -std=c++20 -I./inc
 ifeq '$(findstring ;,$(PATH))' ';' # Detect Windows
     EXE := ./bin/brassc.exe
 else # Or Unix
