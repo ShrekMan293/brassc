@@ -1,5 +1,10 @@
-#include "printer.hpp"
+#include "context.hpp"
 
 int main(int argc, char** argv) {
-    return 0;
+    bool returnTo = false;
+    Brass::BrassContext context = Brass::BrassContext(argc, argv, &returnTo);
+
+    if (!returnTo) context.run(&returnTo);
+
+    return returnTo;
 }

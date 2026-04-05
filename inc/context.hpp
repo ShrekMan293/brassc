@@ -1,24 +1,54 @@
 #pragma once
 #include "common.hpp"
+#include "printer.hpp"
+#include "token.hpp"
+#include "result.hpp"
+#include <functional>
+#include <map>
 
 namespace Brass {
-    struct BrassFile
-    {
-        string path;
-        string source;
+    struct BrassConfiguration {
+        bool nerdOut = false;
+        bool multiThread = true;
+        bool quiet = false;
+        bool color = true;
+        string printTokens = "";
+        void* argList;
     };
 
+    enum class ArgUsage {
+        NONE, FILE, FILES
+    };
+    struct Arg {
+        ArgUsage usage;
+        string description;
+        std::function<void(BrassConfiguration*, const std::string&)> code;
+    };
 
+    struct LexerResult {
+        vector<Token> output;
+        vector<Error> errors;
+        vector<size_t> lineStarts;
+    };
+    
     class BrassContext {
-        string ReadFile(string path);
-        bool ParseArgument(string arg);
+        string ReadFile(string path, bool* returnTo);
+        void InitArguments();
+        void MakeArgument(string name, string description, ArgUsage usage, std::function<void(BrassConfiguration*,  const std::string&)> code);
+        void MakeArgument(string shortName, string longName, string description, ArgUsage usage, std::function<void(BrassConfiguration*, const std::string&)> code);
 
-        bool nerdOut = false;
-        string printTokens = "";
+        BrassConfiguration cfg;
+        std::map<string, Arg> argumentList;
+
+        void printTokens(vector<Token> tokens);
+        LexerResult runlexer(string file);
 
         public:
-        vector<BrassFile> sources;
+        void run(bool* returnTo);
+        std::map<string, BrassFile> sources;
 
-        BrassContext(int argc, char** argv);
+        BrassContext(int argc, char** argv, bool* returnTo);
+        ~BrassContext();
+        BrassPrinter* printer;
     };
 }

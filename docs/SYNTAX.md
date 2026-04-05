@@ -41,6 +41,7 @@ The Brass syntax is built on the idea of verbosity, because ***verbose code is s
   - [Operators](#operators)
   - [Casts](#casts)
     - [Implicit Conversions](#implicit-conversions)
+    - [Reinterpret Casts](#reinterpret-casts)
   - [Function Overloading](#function-overloading)
   - [Modules](#modules)
   - [Final Overview](#final-overview)
@@ -79,6 +80,12 @@ There are **three** types of custom types in Brass:
 type Person {
     age -> s32;
     name -> string;
+}
+```
+By default, custom types are heap objects. To declare a custom type as a stack object:
+```
+type primitive String from List<char> {
+    
 }
 ```
 
@@ -538,11 +545,18 @@ String(data -> List<char>) {
 **All custom casts in Brass are explicit.**
 
 ### Implicit Conversions
-Implicit conversions in Brass are only with primitive types
+There is one kind of implicit conversion in Brass:
 
-- Integers convert up or down (converting to smaller bit width will throw a warning)
-- Floating point numbers are the same, integers and floating point numbers convert to each other
-- Pointers convert to integers but not floating points
+integers convert to floating points and vice versa
+
+### Reinterpret Casts
+Reinterpret casts take the bits in one object and treat them as another.
+
+Best usage is ptr->integer or integer->ptr
+```
+var z -> ulong = 0xF00000800A20F0DE;
+var y -> int* = reinterpret<int*>(z);
+```
 
 ## Function Overloading
 Functions in Brass can be overriden. Functions are distinguished by parameters, they ***CANNOT*** be distinguished by return type
@@ -596,7 +610,7 @@ u64         |[Types](#types)                |foreach    |[Loops](#foreach-loop) 
 s64         |[Types](#types)                |break      |[Loops](#breakcontinue)            |comptime   |[Modifiers](#variable-modifiers)   |
 f32         |[Types](#types)                |continue   |[Loops](#breakcontinue)            |from       |[Polymorphism](#polymorphism)      |
 f64         |[Types](#types)                |switch     |[Switch](#switch-block)            |override   |[Polymorphism](#polymorphism)      |
-char        |[Types](#types)                |case       |[Switch](#switch-block)            |abstract   |[Oops, duplicate](#polymorphism)   |
+char        |[Types](#types)                |case       |[Switch](#switch-block)            |primitive  |[Custom Types](#custom-types)      |
 bool        |[Types](#types)                |default    |[Switch](#switch-block)            |new        |[Memory](#memory)                  |
 byte        |[Types](#types)                |return     |[Returns](#return)                 |delete     |[Memory](#memory)                  |
 int         |[Types](#types)                |public     |[Visibility](#visibility-modifiers)|operator   |[Operators](#operator-overloading) |
@@ -609,3 +623,4 @@ type        |[Custom Types](#custom-types)  |cdecl      |[Modifiers](#function-m
 enum        |[Custom Types](#custom-types)  |and        |[Operators](#operators)            |or         |[Operators](#operators)            |
 exception   |[Custom Types](#custom-types)  |typeof     |[Operators](#operators)            |impl       |[Implementations](#implementations)|
 is          |[Operators](#operators)        |null       |[Null Types](#null)                |self       |[Methods](#methods)                |
+reinterpret |[Reinterpret Casts](#reinterpret-casts)|

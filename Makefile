@@ -4,7 +4,7 @@ rwildcard = $(foreach d,$(wildcard $(1)*),$(call rwildcard,$(d)/,$(2)) $(filter 
 # Usage: Find all .c files in the 'src' directory and its subdirectories
 SRCFILES := $(call rwildcard, src/, *.cpp)
 COMPILER := g++
-CFLAGS := -Wall -Wextra -O3 -std=c++20 -I./inc
+CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O3 -std=c++20 -I./inc
 ifeq '$(findstring ;,$(PATH))' ';' # Detect Windows
     EXE := ./bin/brassc.exe
 else # Or Unix
@@ -23,9 +23,13 @@ build:
 	$(COMPILER) $(CFLAGS) $(SRCFILES) -o $(EXE)
 
 run:
-	$(EXE) $(ARGS)
+	$(EXE) ./test/test.brass -t ./test/test.tokens
 
 git:
 	git add .
 	git commit -m '$(ARGS)'
 	git push
+
+debug:
+	$(COMPILER) $(CFLAGS) -g $(SRCFILES) -o $(EXE)
+	gdb $(EXE)

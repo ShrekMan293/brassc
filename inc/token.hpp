@@ -1,5 +1,5 @@
 #pragma once
-#include <iostream>
+#include "common.hpp"
 #undef NULL
 #undef EOF
 
@@ -9,7 +9,7 @@ namespace Brass
         // Grouping
         LPAREN, RPAREN,
         LBRACK, RBRACK,
-        LRBACE, RBRACE,
+        LBRACE, RBRACE,
 
         // Unary
         PLUS_PLUS, MINUS_MINUS,
@@ -42,8 +42,10 @@ namespace Brass
         COMMA, DOT,
         ARROW, SEMICOLON,
         DOUBLE_COLON, QUESTION,
+        COLON,
 
         // Keyword Operators
+        // AND WILL ALWAYS BE FIRST
         AND, OR, IS,
         SIZEOF, TYPEOF,
 
@@ -86,25 +88,39 @@ namespace Brass
         UNMANAGED, VOLATILE,
         MUT, COMPTIME,
 
+        // Type Modifiers
+        PRIMITIVE,
+
         // Memory
         NEW, DELETE, 
-        NULL,
+        NULL, REINTERPRET,
 
         // Exceptions
         TRY, CATCH, FINALLY,
         THROW, THROWS,
+        // THROWS WILL ALWAYS BE LAST
 
         // Literals
         IDENTIFIER, STRING_LITERAL,
-        INT_LITERALM, FLOAT_LITERAL,
+        INT_LITERAL, FLOAT_LITERAL,
         INTERPOLATED_STRING,
 
-        EOF
+        UNKNOWN, EOF
     };
 
     struct Token
     {
-        /* data */
+        TokenType type;
+        size_t start;
+        size_t length;
+        
+        string file;
+        int line;
+        int column;
+
+        operator TokenType() const { return type; }
     };
 
+    TokenType getTokenFromString(string str);
+    string getStringFromToken(TokenType type);
 } // namespace Brass
