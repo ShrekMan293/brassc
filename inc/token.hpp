@@ -48,6 +48,7 @@ namespace Brass
         // AND WILL ALWAYS BE FIRST
         AND, OR, IS,
         SIZEOF, TYPEOF,
+        IN,
 
         // Types
         U8, S8, U16, S16,
@@ -65,7 +66,7 @@ namespace Brass
         // Declarations
         VAR, FN, SELF,
         IMPL, OPERATOR,
-        USING,
+        USING, FROM,
 
         // Control
         DO, WHILE, FOR,
@@ -73,6 +74,7 @@ namespace Brass
         SWITCH, BREAK,
         CONTINUE, RETURN,
         CASE, DEFAULT,
+        IF, ELIF, ELSE,
 
         // Visibility
         PUBLIC, PROTECTED,

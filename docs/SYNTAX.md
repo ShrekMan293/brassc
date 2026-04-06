@@ -501,7 +501,7 @@ Operator|Precedence |Overloadable?  |Arity  |
 ```!=```|```8```    |Yes            |Binary |
 ```is```|```8```    |No             |Binary |
 ```<``` |```9```    |Yes            |Binary |
-```<=```|```9```    |Yes            |Binary |
+```<=```|```9```    |No             |Binary |
 ```>``` |```9```    |Yes            |Binary |
 ```>=```|```9```    |No             |Binary |
 ```or```|```10```   |No             |Binary |
@@ -528,7 +528,7 @@ Operator|Precedence |Overloadable?  |Arity  |
 ```a.b```|```17```  |No             |Binary |
 ```a->b```|```17``` |No             |Binary |
 ```[]```|```17```   |No             |Unary  |
-```()```|```17```   |No             |Unary  |
+```()```|```17```   |Yes            |Unary  |
 ```cast```|```17``` |[Yes](#casts)  |Unary  |
 ```a++```|```18```  |No             |Unary  |
 ```a--```|```18```  |No             |Unary  |
