@@ -495,45 +495,45 @@ Operator|Precedence |Overloadable?  |Arity  |
 ```\|\|```|```2```  |No             |Binary |
 ```&&```|```3```    |No             |Binary |
 ```\|```|```4```    |Yes            |Binary |
-```^``` |```6```    |Yes            |Binary |
-```&``` |```7```    |Yes            |Binary |
-```==```|```8```    |Yes            |Binary |
-```!=```|```8```    |Yes            |Binary |
-```is```|```8```    |No             |Binary |
-```<``` |```9```    |Yes            |Binary |
-```<=```|```9```    |No             |Binary |
-```>``` |```9```    |Yes            |Binary |
-```>=```|```9```    |No             |Binary |
-```or```|```10```   |No             |Binary |
-```and```|```11```   |No            |Binary |
-```<<```|```12```   |Yes            |Binary |
-```>>```|```13```   |Yes            |Binary |
-```+``` |```14```   |Yes            |Binary |
-```-``` |```14```   |Yes            |Binary |
-```*``` |```15```   |Yes            |Binary |
-```/``` |```15```   |Yes            |Binary |
-```%``` |```15```   |Yes            |Binary |
-```sizeof``` |```16```|No           |Unary  |
-```typeof``` |```16```|No           |Unary  |
-```new``` |```16``` |No             |Unary  |
-```delete``` |```16``` |No          |Unary  |
-```&``` |```16```   |No             |Unary  |
-```*``` |```16```   |No             |Unary  |
-```!``` |```16```   |No             |Unary  |
-```~``` |```16```   |Yes            |Unary  |
-```+``` |```16```   |No             |Unary  |
-```-``` |```16```   |No             |Unary  |
-```++a```|```16```  |No             |Unary  |
-```--a```|```16```  |No             |Unary  |
-```a.b```|```17```  |No             |Binary |
-```a->b```|```17``` |No             |Binary |
-```[]```|```17```   |No             |Unary  |
-```()```|```17```   |Yes            |Unary  |
-```cast```|```17``` |[Yes](#casts)  |Unary  |
-```a++```|```18```  |No             |Unary  |
-```a--```|```18```  |No             |Unary  |
-```a--```|```18```  |No             |Unary  |
-```a::b```|```19``` |No             |Binary |
+```^``` |```5```    |Yes            |Binary |
+```&``` |```6```    |Yes            |Binary |
+```or```|```7```    |No             |Binary |
+```and```|```8```   |No             |Binary |
+```==```|```9```   |Yes            |Binary |
+```!=```|```9```   |Yes            |Binary |
+```is```|```9```   |No             |Binary |
+```<``` |```10```   |Yes            |Binary |
+```<=```|```10```   |No             |Binary |
+```>``` |```10```   |Yes            |Binary |
+```>=```|```10```   |No             |Binary |
+```<<```|```11```   |Yes            |Binary |
+```>>```|```12```   |Yes            |Binary |
+```+``` |```13```   |Yes            |Binary |
+```-``` |```13```   |Yes            |Binary |
+```*``` |```14```   |Yes            |Binary |
+```/``` |```14```   |Yes            |Binary |
+```%``` |```14```   |Yes            |Binary |
+```sizeof``` |```15```|No           |Unary  |
+```typeof``` |```15```|No           |Unary  |
+```new``` |```15``` |No             |Unary  |
+```delete``` |```15``` |No          |Unary  |
+```&``` |```15```   |No             |Unary  |
+```*``` |```15```   |No             |Unary  |
+```!``` |```15```   |No             |Unary  |
+```~``` |```15```   |Yes            |Unary  |
+```+``` |```15```   |No             |Unary  |
+```-``` |```15```   |No             |Unary  |
+```++a```|```15```  |No             |Unary  |
+```--a```|```15```  |No             |Unary  |
+```a.b```|```16```  |No             |Binary |
+```a->b```|```16``` |No             |Binary |
+```[]```|```16```   |No             |Unary  |
+```()```|```16```   |Yes            |Unary  |
+```cast```|```16``` |[Yes](#casts)  |Unary  |
+```a++```|```17```  |No             |Unary  |
+```a--```|```17```  |No             |Unary  |
+```a--```|```17```  |No             |Unary  |
+```a::b```|```18``` |No             |Binary |
 
 ## Casts
 Casts are made by writing constructors, for example:

@@ -146,6 +146,7 @@ namespace Brass {
         t.line = line;
         t.type = TokenType::INT_LITERAL;
 
+        advance();
         while ((current() == '0' || current() == '1') && !atEnd())
             advance();
 
@@ -168,6 +169,7 @@ namespace Brass {
         t.line = line;
         t.type = TokenType::INT_LITERAL;
 
+        advance();
         while (isHex(current()) && !atEnd())
             advance();
 

@@ -1,4 +1,5 @@
 #include "lexer.hpp"
+#include "parser.hpp"
 
 #include <fstream>
 #include <thread>
@@ -15,8 +16,10 @@ namespace Brass {
             [](BrassConfiguration* ctx, const std::string& param){ ctx->quiet = true; });
         MakeArgument("-n", "--nerd", "Print nerd stats.", ArgUsage::NONE, 
             [](BrassConfiguration* ctx, const std::string& param){ ctx->nerdOut = true; });
-        MakeArgument("-t", "--emit-tokens", "Print tokens to a file.", ArgUsage::FILE, 
+        MakeArgument("-et", "--emit-tokens", "Print tokens to a file.", ArgUsage::FILE, 
             [](BrassConfiguration* ctx, const std::string& param){ ctx->printTokens = param; });
+        MakeArgument("-ea", "--emit-ast", "Print ast to a file.", ArgUsage::FILE, 
+            [](BrassConfiguration* ctx, const std::string& param){ ctx->printAST = param; });
         MakeArgument("-v", "--version", "Print the Brass Version.", ArgUsage::NONE, 
             [](BrassConfiguration* ctx, const std::string& param){ std::cout << BRASSC << '\n'; });
         MakeArgument("-h", "--help", "Print this help message.", ArgUsage::NONE, 
@@ -92,16 +95,82 @@ namespace Brass {
         ofs.close();
     }
 
+    void BrassContext::outNode(std::ostream& os, Node node) {
+        os << magic_enum::enum_name(node.type) << "(" 
+            << sources[node.enclosedToken.file].source.substr(node.enclosedToken.start, node.enclosedToken.length) << ")";
+    }
+
+    void BrassContext::printNode(std::ofstream& ofs, Node node, int indent, vector<int> stops) {
+        if (indent == 0) {
+            ofs << "|\n|\n|\n|----";
+            outNode(ofs, node);
+            ofs << '\n';
+            stops.push_back(indent + 1);
+            for (auto child : node.children)
+            {
+                printNode(ofs, child, indent + 1, stops);
+            }
+        } else {
+            for (int i = 0; i < 4; i++)
+            {
+                ofs << "|";
+                for (int j = 0; j < indent + 1; j++)
+                {
+                    ofs << '\t';
+                    if (std::ranges::find(stops, j) != stops.end())
+                    {
+                        ofs << "|";
+                    }
+                }
+                if (i == 3)
+                {
+                    ofs << "----";
+                    outNode(ofs, node);
+                    ofs << '\n';
+                }
+                else
+                {
+                    ofs << '\n';
+                }
+            }
+            stops.push_back(indent + 1);
+            for (auto child : node.children)
+            {
+                printNode(ofs, child, indent + 1, stops);
+            }
+        }
+    }
+
+    void BrassContext::printTree(vector<Node> ast)
+    {
+        std::ofstream ofs = std::ofstream(cfg.printAST);
+        if (!ofs) {
+            std::cout << "\e[1;31mFailure opening file '" << cfg.printAST << "'.\n\e[0m";
+            ofs.close();
+            return;
+        }
+        ofs << '\n';
+
+        for (auto node : ast) {
+            printNode(ofs, node);
+        }
+    }
+
     LexerResult BrassContext::runlexer(string file)
     {
         lexer lex = lexer(this, file);
         return lex.lexFile();
     }
 
+    Result<Node> BrassContext::runParser(vector<Token> tokens) {
+        parser parse = parser(&tokens);
+        return parse.parseFile();
+    }
+
     void BrassContext::run(bool* returnTo) {
         ThreadPool pool = ThreadPool();
-        std::vector<std::future<LexerResult>> lexFutures;
-        std::vector<vector<Token>> lexResults;
+        vector<std::future<LexerResult>> lexFutures;
+        vector<vector<Token>> lexResults;
 
         for (auto& pair : sources) {
             const string& file = pair.first;
@@ -123,6 +192,27 @@ namespace Brass {
                 printTokens(result.output);
 
             lexResults.push_back(result.output);
+        }
+
+        vector<std::future<Result<Node>>> parseFutures;
+        vector<vector<Node>> parseResults;
+
+        for (auto& tokens : lexResults) {
+            parseFutures.push_back(pool.enqueue([this, tokens]() {
+                return this->runParser(tokens);
+            }));
+        }
+
+        for (auto& future : parseFutures) {
+            auto result = future.get();
+            for (auto& error : result.errors) {
+                printer->error(error.file, error.message, error.line, error.column);
+            }
+
+            if (cfg.printAST != "")
+                printTree(result.output);
+
+            parseResults.push_back(result.output);
         }
     }
 

@@ -1,101 +1,146 @@
 #include "parser.hpp"
+#include "magic_enum/magic_enum.hpp"
 
 namespace Brass {
-    void Parser::advance(int off)
+    void parser::advance(int off)
     {
         if (curPos + off >= tokens->size()) {
-            off = tokens->size() - curPos;
+            off = tokens->size() - curPos - 1;
         }
 
         curPos += off;
+
+        if (current() == TokenType::LBRACE) blockDepth++;
+        else if (current() == TokenType::RBRACE) blockDepth--;
     }
-    Token Parser::peek(int off)
+    Token parser::peek(int off)
     {
         if (curPos + off >= tokens->size()) {
-            off = tokens->size() - curPos;
+            return tokens->at(tokens->size() - 1);
         }
 
         return tokens->at(curPos + off);
     }
-    Token Parser::current()
+    Token parser::current()
     {
         return tokens->at(curPos);
     }
-    bool Parser::atEnd()
+    bool parser::atEnd()
     {
         return current() == TokenType::EOF;
     }
-    void Parser::parseTopLevelStatement()
+    void parser::parseTopLevelStatement()
     {
-        Node* visibility = nullptr;
-        switch (current())
-        {
-        case TokenType::PUBLIC:
-        case TokenType::INTERNAL:
-        case TokenType::LOCAL:
-        case TokenType::PROTECTED:
-        case TokenType::PRIVATE:
-            visibility = new Node();
-            visibility->enclosedToken = current();
-            visibility->type = NodeType::VisibilityNode;
-            advance();
-            [[fallthrough]];
-        case TokenType::FN: return parseFunctionDecl(visibility, result);
-        case TokenType::VAR: return parseVarDecl(visibility, result);
-        case TokenType::TYPE: return parseTypeDecl(visibility);
-        case TokenType::ENUM: return parseEnumDecl(visibility);
-        case TokenType::IMPL: return parseImplDecl(visibility);
-        case TokenType::OPERATOR: return parseOperatorDecl(visibility);
-        case TokenType::IDENTIFIER: return parseConstructorDecl(visibility, result);
-        case TokenType::BIN_NOT: return parseDestructorDecl(visibility, result);
-        case TokenType::EXCEPTION: return parseExceptionDecl(visibility);
-        case TokenType::USING: return parseUsingStmt();
-        default:
-            throw ParseError("Unexpected token as top level statement.", current().line, current().column, false, blockDepth);
+        try {
+            Node* visibility = nullptr;
+            switch (current())
+            {
+            case TokenType::PUBLIC:
+            case TokenType::INTERNAL:
+            case TokenType::LOCAL:
+            case TokenType::PROTECTED:
+            case TokenType::PRIVATE:
+                visibility = new Node();
+                visibility->enclosedToken = current();
+                visibility->type = NodeType::VisibilityNode;
+                advance();
+                [[fallthrough]];
+            case TokenType::FN: return parseFunctionDecl(visibility, result);
+            case TokenType::VAR: return parseVarDecl(visibility, result);
+            case TokenType::TYPE: return parseTypeDecl(visibility);
+            case TokenType::ENUM: return parseEnumDecl(visibility);
+            case TokenType::IMPL: return parseImplDecl(visibility);
+            case TokenType::OPERATOR: return parseOperatorDecl(visibility);
+            case TokenType::IDENTIFIER: return parseConstructorDecl(visibility, result);
+            case TokenType::BIN_NOT: return parseDestructorDecl(visibility, result);
+            case TokenType::EXCEPTION: return parseExceptionDecl(visibility);
+            case TokenType::USING: return parseUsingStmt();
+            default:
+                throw ParseError("Unexpected token as top level statement.", current().line, current().column, true, 0);
+            }
+        } catch (ParseError& err) {
+            errors.push_back(Error(current().file, err.msg.c_str(), err.line, err.col, ErrorType::ERR));
+            if (err.severe) {
+                while (this->blockDepth != 0 && !atEnd()) {
+                    advance();
+                }
+                advance();
+            } else {
+                while (!atEnd()) {
+                    if (current() == TokenType::RBRACE || current() == TokenType::EOF) {
+                        break;
+                    }
+
+                    advance();
+                }
+                advance();
+            }
         }
     }
-    void Parser::parseInnerStatement(vector<Node> &tree)
+    void parser::parseInnerStatement(vector<Node> &tree)
     {
+        int blockDepth = this->blockDepth - 1;
         Node code = makeCurrentNode(NodeType::CodeBlockNode);
         advance();
 
         while (current() != TokenType::RBRACE && !atEnd()) {
-            switch (current())
-            {
-            case TokenType::VAR: parseVarDecl(nullptr, code.children); break;
-            case TokenType::DO: parseDoWhileStmt(code.children); break;
-            case TokenType::WHILE: parseWhileStmt(code.children); break;
-            case TokenType::TIMES: parseTimesStmt(code.children); break;
-            case TokenType::FOR: parseForStmt(code.children); break;
-            case TokenType::FOREACH: parseForeachStmt(code.children); break;
-            case TokenType::IF: parseIfStmt(code.children); break;
-            case TokenType::SWITCH: parseSwitchStmt(code.children); break;
-            case TokenType::BREAK: {
-                Node stmt = Node();
-                stmt.enclosedToken = current();
-                stmt.type = NodeType::BreakNode;
-                code.children.push_back(stmt);
-                advance();
-                break;
-            }
-            case TokenType::CONTINUE: {
-                Node stmt = Node();
-                stmt.enclosedToken = current();
-                stmt.type = NodeType::ContinueNode;
-                code.children.push_back(stmt);
-                advance();
-                break;
-            }
-            case TokenType::RETURN: parseReturnStmt(code.children); break;
-            case TokenType::TRY: parseTryCatchStmt(code.children); break;
-            case TokenType::THROW: parseThrowStmt(code.children); break;
-            default: parseExpr(); advance(); break;
+            try {
+                switch (current())
+                {
+                    case TokenType::VAR: parseVarDecl(nullptr, code.children); break;
+                    case TokenType::DO: parseDoWhileStmt(code.children); break;
+                    case TokenType::WHILE: parseWhileStmt(code.children); break;
+                    case TokenType::TIMES: parseTimesStmt(code.children); break;
+                    case TokenType::FOR: parseForStmt(code.children); break;
+                    case TokenType::FOREACH: parseForeachStmt(code.children); break;
+                    case TokenType::IF: parseIfStmt(code.children); break;
+                    case TokenType::SWITCH: parseSwitchStmt(code.children); break;
+                    case TokenType::BREAK: {
+                        Node stmt = Node();
+                        stmt.enclosedToken = current();
+                        stmt.type = NodeType::BreakNode;
+                        code.children.push_back(stmt);
+                        advance();
+                        break;
+                    }
+                    case TokenType::CONTINUE: {
+                        Node stmt = Node();
+                        stmt.enclosedToken = current();
+                        stmt.type = NodeType::ContinueNode;
+                        code.children.push_back(stmt);
+                        advance();
+                        break;
+                    }
+                    case TokenType::RETURN: parseReturnStmt(code.children); break;
+                    case TokenType::TRY: parseTryCatchStmt(code.children); break;
+                    case TokenType::THROW: parseThrowStmt(code.children); break;
+                    case TokenType::LBRACE: parseInnerStatement(code.children); break;
+                    default: parseExpr(); expect(TokenType::SEMICOLON); advance(); break;
+                }
+            } catch (ParseError& e) {
+                errors.push_back(Error(current().file, e.msg.c_str(), e.line, e.col, ErrorType::ERR));
+                if (e.severe) {
+                    while (this->blockDepth != blockDepth && this->blockDepth != 0 && !atEnd()) {
+                        advance();
+                    }
+                    advance();
+                } else {
+                    while (!atEnd()) {
+                        if (current() == TokenType::LBRACE || current() == TokenType::RBRACE
+                            || current() == TokenType::SEMICOLON || current() == TokenType::EOF) {
+                            break;
+                        }
+
+                        advance();
+                    }
+                    advance();
+                }
             }
         }
         tree.push_back(code);
         advance();
     }
-    vector<Node> Parser::parseFunctionModifiers()
+    vector<Node> parser::parseFunctionModifiers()
     {
         vector<Node> result = {};
         while (!atEnd())
@@ -120,7 +165,7 @@ namespace Brass {
         return result;
     }
 
-    vector<Node> Parser::parseTypeModifiers()
+    vector<Node> parser::parseTypeModifiers()
     {
         vector<Node> result = {};
         while (!atEnd())
@@ -141,7 +186,7 @@ namespace Brass {
         return result;
     }
 
-    void Parser::parseFunctionDecl(Node *visibility, vector<Node>& tree)
+    void parser::parseFunctionDecl(Node *visibility, vector<Node>& tree)
     {
         Node decl = makeCurrentNode(NodeType::FunctionDeclarationNode);
 
@@ -171,7 +216,6 @@ namespace Brass {
             parameterNode.children.push_back(param);
 
             if (peek() == TokenType::ASSIGN) {
-                advance();
                 assignments.push_back(parseExpr(&param));
             }
             if (peek() == TokenType::COMMA) {
@@ -206,7 +250,6 @@ namespace Brass {
             advance();
         }
         else {
-
             expect(TokenType::LBRACE);
             parseInnerStatement(decl.children);
         }
@@ -214,7 +257,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseVarDecl(Node *visibility, vector<Node>& tree)
+    void parser::parseVarDecl(Node *visibility, vector<Node>& tree)
     {
         Node decl = makeCurrentNode(NodeType::VariableDeclarationNode);
         if (visibility != nullptr) decl.children.push_back(*visibility);
@@ -227,20 +270,18 @@ namespace Brass {
 
         decl.children.push_back(iden);
         decl.children.push_back(type);
-        if (peek() == TokenType::SEMICOLON) {
-            advance(2);
-        }
-        else {
+        if (peek() != TokenType::SEMICOLON) {
             expect(TokenType::ASSIGN);
+            advance(-1);
             decl.children.push_back(parseExpr(&iden));
-            expect(TokenType::SEMICOLON);
-            advance();
         }
 
+        expect(TokenType::SEMICOLON);
+        advance();
         tree.push_back(decl);
     }
 
-    void Parser::parseTypeDecl(Node *visibility)
+    void parser::parseTypeDecl(Node *visibility)
     {
         Node decl = makeCurrentNode(NodeType::TypeDeclarationNode);
 
@@ -254,7 +295,20 @@ namespace Brass {
         decl.children.push_back(iden);
         if (peek() == TokenType::LESS) {
             advance();
-            decl.children.push_back(parseGenericDeclaration());
+            Node generic = makeCurrentNode(NodeType::GenericDeclarationNode);
+            do {
+                expect(TokenType::IDENTIFIER);
+                generic.children.push_back(makeCurrentNode(NodeType::IdentifierNode));
+                if (peek() == TokenType::COMMA) {
+                    advance(2);
+                    if (current() == TokenType::GREATER) {
+                        throw ParseError("Expected type following ','.", current().line, current().column, false, blockDepth);
+                    }
+                }
+            } while (current() != TokenType::GREATER);
+            advance();
+
+            decl.children.push_back(generic);
         }
         if (peek() == TokenType::FROM) {
             advance(2);
@@ -266,7 +320,7 @@ namespace Brass {
 
         result.push_back(decl);
     }
-    void Parser::parseTypeBlock(vector<Node>& tree)
+    void parser::parseTypeBlock(vector<Node>& tree)
     {
         Node block = makeCurrentNode(NodeType::TypeBlockNode);
 
@@ -290,7 +344,7 @@ namespace Brass {
         tree.push_back(block);
     }
 
-    void Parser::parseEnumDecl(Node *visibility)
+    void parser::parseEnumDecl(Node *visibility)
     {
         Node decl = makeCurrentNode(NodeType::EnumDeclarationNode);
         if (visibility != nullptr) decl.children.push_back(*visibility);
@@ -309,7 +363,7 @@ namespace Brass {
 
         result.push_back(decl);
     }
-    void Parser::parseEnumBlock(vector<Node>& tree) {
+    void parser::parseEnumBlock(vector<Node>& tree) {
         Node decl = makeCurrentNode(NodeType::EnumBlockNode);
 
         while (peek() != TokenType::RBRACE && !atEnd()) {
@@ -318,7 +372,6 @@ namespace Brass {
             decl.children.push_back(iden);
 
             if (peek() == TokenType::ASSIGN) {
-                advance();
                 decl.children.push_back(parseExpr(&iden));
             }
             if (peek() == TokenType::COMMA) {
@@ -338,7 +391,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseImplDecl(Node *visibility)
+    void parser::parseImplDecl(Node *visibility)
     {
         Node decl = makeCurrentNode(NodeType::ImplDeclarationNode);
         if (visibility != nullptr) decl.children.push_back(*visibility);
@@ -363,7 +416,7 @@ namespace Brass {
         result.push_back(decl);
     }
 
-    void Parser::parseImplBlock(vector<Node>& tree)
+    void parser::parseImplBlock(vector<Node>& tree)
     {
         Node decl = makeCurrentNode(NodeType::ImplBlockNode);
         advance();
@@ -399,7 +452,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseOperatorDecl(Node *visibility)
+    void parser::parseOperatorDecl(Node *visibility)
     {
         Node decl = makeCurrentNode(NodeType::OperatorDeclarationNode);
         if (visibility != nullptr) decl.children.push_back(*visibility);
@@ -449,7 +502,6 @@ namespace Brass {
             parameterNode.children.push_back(param);
 
             if (peek() == TokenType::ASSIGN) {
-                advance();
                 assignments.push_back(parseExpr(&param));
             }
             if (peek() == TokenType::COMMA) {
@@ -481,15 +533,27 @@ namespace Brass {
         result.push_back(decl);
     }
 
-    void Parser::parseConstructorDecl(Node *visibility, vector<Node> &tree)
+    void parser::parseConstructorDecl(Node *visibility, vector<Node> &tree)
     {
         Node decl = makeCurrentNode(NodeType::ConstructorDeclarationNode);
         if (visibility != nullptr) decl.children.push_back(*visibility);
 
         if (peek() == TokenType::LESS) {
             advance();
-            decl.children.push_back(parseGenericDeclaration());
-            expect(TokenType::GREATER);
+            Node generic = makeCurrentNode(NodeType::GenericDeclarationNode);
+            do {
+                expect(TokenType::IDENTIFIER);
+                generic.children.push_back(makeCurrentNode(NodeType::IdentifierNode));
+                if (peek() == TokenType::COMMA) {
+                    advance(2);
+                    if (current() == TokenType::GREATER) {
+                        throw ParseError("Expected type following ','.", current().line, current().column, false, blockDepth);
+                    }
+                }
+            } while (current() != TokenType::GREATER);
+            advance();
+
+            decl.children.push_back(generic);
         }
 
         expect(TokenType::LPAREN);
@@ -505,7 +569,6 @@ namespace Brass {
             parameterNode.children.push_back(param);
 
             if (peek() == TokenType::ASSIGN) {
-                advance();
                 assignments.push_back(parseExpr(&param));
             }
             if (peek() == TokenType::COMMA) {
@@ -537,7 +600,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseDestructorDecl(Node *visibility, vector<Node> &tree)
+    void parser::parseDestructorDecl(Node *visibility, vector<Node> &tree)
     {
         advance();
         Node decl = makeCurrentNode(NodeType::DestructorDeclarationNode);
@@ -545,8 +608,20 @@ namespace Brass {
 
         if (peek() == TokenType::LESS) {
             advance();
-            decl.children.push_back(parseGenericDeclaration());
-            expect(TokenType::GREATER);
+            Node generic = makeCurrentNode(NodeType::GenericDeclarationNode);
+            do {
+                expect(TokenType::IDENTIFIER);
+                generic.children.push_back(makeCurrentNode(NodeType::IdentifierNode));
+                if (peek() == TokenType::COMMA) {
+                    advance(2);
+                    if (current() == TokenType::GREATER) {
+                        throw ParseError("Expected type following ','.", current().line, current().column, false, blockDepth);
+                    }
+                }
+            } while (current() != TokenType::GREATER);
+            advance();
+
+            decl.children.push_back(generic);
         }
 
         expect(TokenType::LPAREN);
@@ -562,7 +637,6 @@ namespace Brass {
             parameterNode.children.push_back(param);
 
             if (peek() == TokenType::ASSIGN) {
-                advance();
                 assignments.push_back(parseExpr(&param));
             }
             if (peek() == TokenType::COMMA) {
@@ -594,7 +668,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseExceptionDecl(Node *visibility)
+    void parser::parseExceptionDecl(Node *visibility)
     {
         Node decl = makeCurrentNode(NodeType::ExceptionDeclarationNode);
 
@@ -617,7 +691,7 @@ namespace Brass {
         result.push_back(decl);
     }
 
-    void Parser::parseUsingStmt()
+    void parser::parseUsingStmt()
     {
         Node decl = makeCurrentNode(NodeType::UsingStatementNode);
 
@@ -645,7 +719,7 @@ namespace Brass {
         result.push_back(decl);
     }
 
-    void Parser::parseDoWhileStmt(vector<Node> &tree)
+    void parser::parseDoWhileStmt(vector<Node> &tree)
     {
         Node decl = makeCurrentNode(NodeType::DoWhileStmtNode);
         expect(TokenType::LBRACE);
@@ -661,7 +735,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseWhileStmt(vector<Node> &tree)
+    void parser::parseWhileStmt(vector<Node> &tree)
     {
         Node decl = makeCurrentNode(NodeType::WhileStmtNode);
         advance();
@@ -671,7 +745,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseTimesStmt(vector<Node> &tree)
+    void parser::parseTimesStmt(vector<Node> &tree)
     {
         Node decl = makeCurrentNode(NodeType::TimesStmtNode);
         advance();
@@ -681,7 +755,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseForStmt(vector<Node> &tree)
+    void parser::parseForStmt(vector<Node> &tree)
     {
         Node decl = makeCurrentNode(NodeType::ForStmtNode);
 
@@ -698,7 +772,6 @@ namespace Brass {
             decl.children.push_back(vardec);
 
             if (peek() == TokenType::ASSIGN) {
-                advance();
                 decl.children.push_back(parseExpr(&iden));
             }
         }
@@ -723,14 +796,14 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseForeachStmt(vector<Node> &tree)
+    void parser::parseForeachStmt(vector<Node> &tree)
     {
         Node decl = makeCurrentNode(NodeType::ForeachStmtNode);
         expect(TokenType::IDENTIFIER);
         decl.children.push_back(makeCurrentNode(NodeType::IdentifierNode));
         expect(TokenType::IN);
         advance();
-        decl.children.push_back(parsePrimary());
+        decl.children.push_back(parseExpr());
         
         expect(TokenType::LBRACE);
         parseInnerStatement(decl.children);
@@ -738,7 +811,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseIfStmt(vector<Node> &tree)
+    void parser::parseIfStmt(vector<Node> &tree)
     {
         Node parent = makeCurrentNode(NodeType::IfElseBlockNode);
 
@@ -752,9 +825,9 @@ namespace Brass {
         while (current() == TokenType::ELIF && !atEnd()) {
             Node elifDecl = makeCurrentNode(NodeType::ElifStmtNode);
             advance();
-            decl.children.push_back(parseExpr());
+            elifDecl.children.push_back(parseExpr());
             expect(TokenType::LBRACE);
-            parseInnerStatement(decl.children);
+            parseInnerStatement(elifDecl.children);
             parent.children.push_back(elifDecl);
         }
         if (current() == TokenType::ELSE) {
@@ -767,11 +840,11 @@ namespace Brass {
         tree.push_back(parent);
     }
 
-    void Parser::parseSwitchStmt(vector<Node> &tree)
+    void parser::parseSwitchStmt(vector<Node> &tree)
     {
         Node decl = makeCurrentNode(NodeType::SwitchStmtNode);
         advance();
-        decl.children.push_back(parsePrimary());
+        decl.children.push_back(parseExpr());
 
         expect(TokenType::LBRACE);
         parseSwitchBlock(decl.children);
@@ -779,7 +852,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseSwitchBlock(vector<Node> &tree)
+    void parser::parseSwitchBlock(vector<Node> &tree)
     {
         Node decl = makeCurrentNode(NodeType::SwitchBlockNode);
         advance();
@@ -817,7 +890,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseReturnStmt(vector<Node> &tree)
+    void parser::parseReturnStmt(vector<Node> &tree)
     {
         Node decl = makeCurrentNode(NodeType::ReturnStmtNode);
         if (peek() != TokenType::SEMICOLON) {
@@ -830,7 +903,7 @@ namespace Brass {
         tree.push_back(decl);
     }
 
-    void Parser::parseTryCatchStmt(vector<Node> &tree)
+    void parser::parseTryCatchStmt(vector<Node> &tree)
     {
         Node block = makeCurrentNode(NodeType::TryCatchFinallyNode);
         expect(TokenType::LBRACE);
@@ -840,7 +913,7 @@ namespace Brass {
         expect(TokenType::CATCH);
         Node _catch = makeCurrentNode(NodeType::CatchStmtNode);
         advance();
-        _catch.children.push_back(parsePrimary());
+        _catch.children.push_back(parseExpr());
         block.children.push_back(_catch);
         expect(TokenType::LBRACE);
         parseInnerStatement(_catch.children);
@@ -855,19 +928,19 @@ namespace Brass {
         tree.push_back(block);
     }
 
-    void Parser::parseThrowStmt(vector<Node> &tree)
+    void parser::parseThrowStmt(vector<Node> &tree)
     {
         Node decl = makeCurrentNode(NodeType::ThrowStmtNode);
         if (peek() != TokenType::SEMICOLON) {
             advance();
-            decl.children.push_back(parsePrimary());
+            decl.children.push_back(parseExpr());
         }
         expect(TokenType::SEMICOLON);
         advance();
         tree.push_back(decl);
     }
 
-    Node Parser::makeCurrentNode(NodeType type)
+    Node parser::makeCurrentNode(NodeType type)
     {
         Node n;
         n.enclosedToken = current();
@@ -875,48 +948,371 @@ namespace Brass {
 
         return n;
     }
-    void Parser::expect(TokenType type)
+    void parser::expect(TokenType type)
     {
+        bool severe = type == TokenType::LBRACE || type == TokenType::RBRACE;
+
         advance();
         if (current() != type) {
             throw ParseError("Expected " + getStringFromToken(type) + " but got " + getStringFromToken(current().type) + ".", 
-                    current().line, current().column, false, blockDepth);
+                    current().line, current().column, severe, blockDepth);
         }
     }
 
-    Node Parser::parseType()
+    Node parser::parseType()
     {
         Node parent = makeCurrentNode(NodeType::TypeNode);
-        parent.children.push_back(parseIdentifier());
+
+        if (peek() == TokenType::LESS) {
+            advance(2);
+            Node generic = makeCurrentNode(NodeType::GenericReferenceNode);
+            do {
+                generic.children.push_back(parseType());
+                
+                if (peek() == TokenType::COMMA) {
+                    advance(2);
+                    if (current() == TokenType::GREATER) {
+                        throw ParseError("Expected type following ','.", current().line, current().column, false, blockDepth);
+                    }
+                }
+            } while (current() != TokenType::GREATER);
+            parent.children.push_back(generic);
+        }
+        while (peek() == TokenType::STAR) {
+            advance();
+            parent.children.push_back(makeCurrentNode(NodeType::PointerNode));
+        }
+
+        return parent;
     }
 
-    Result<Node> Parser::parseFile()
-    {
-        while (!atEnd()) {
-            try {
-                parseTopLevelStatement();
-            } catch (ParseError& e) {
-                errors.push_back(Error(current().file, e.msg.c_str(), e.line, e.col, ErrorType::ERR));
-                
-                while (blockDepth != e.depth && blockDepth != 0) {
-                    if (current() == TokenType::LBRACE) {
-                        blockDepth++;
-                    }
-                    else if (current() == TokenType::RBRACE) {
-                        blockDepth--;
-                    }
-                    else if (current() == TokenType::EOF) {
-                        break;
-                    }
+    bool parser::isOperator(TokenType type) {
+        switch (type)
+        {
+            case TokenType::ASSIGN:
+            case TokenType::PLUS_EQUAL:
+            case TokenType::MINUS_EQUAL:
+            case TokenType::STAR_EQUAL:
+            case TokenType::SLASH_EQUAL:
+            case TokenType::MODULO_EQUAL:
+            case TokenType::BIN_AND_EQUAL:
+            case TokenType::BIN_OR_EQUAL:
+            case TokenType::XOR_EQUAL:
+            case TokenType::BIN_NOT_EQUAL:
+            case TokenType::SHL_EQUAL:
+            case TokenType::SHR_EQUAL: 
+            case TokenType::QUESTION: 
+            case TokenType::LOG_OR: 
+            case TokenType::LOG_AND: 
+            case TokenType::BIN_OR: 
+            case TokenType::XOR: 
+            case TokenType::BIN_AND: 
+            case TokenType::OR: 
+            case TokenType::AND: 
+            case TokenType::EQUALS:
+            case TokenType::BANG_EQUALS:
+            case TokenType::IS: 
+            case TokenType::LESS:
+            case TokenType::LESS_EQUAL:
+            case TokenType::GREATER:
+            case TokenType::GREATER_EQUAL: 
+            case TokenType::SHL: 
+            case TokenType::SHR: 
+            case TokenType::PLUS:
+            case TokenType::MINUS: 
+            case TokenType::STAR:
+            case TokenType::SLASH:
+            case TokenType::MODULO: return true;
+            default: return false;
+        }
+    }
 
-                    advance();
+    int parser::opPrecedence(TokenType type) {
+        switch (type)
+        {
+            case TokenType::ASSIGN:
+            case TokenType::PLUS_EQUAL:
+            case TokenType::MINUS_EQUAL:
+            case TokenType::STAR_EQUAL:
+            case TokenType::SLASH_EQUAL:
+            case TokenType::MODULO_EQUAL:
+            case TokenType::BIN_AND_EQUAL:
+            case TokenType::BIN_OR_EQUAL:
+            case TokenType::XOR_EQUAL:
+            case TokenType::BIN_NOT_EQUAL:
+            case TokenType::SHL_EQUAL:
+            case TokenType::SHR_EQUAL: return 0;
+            case TokenType::QUESTION: return 1;
+            case TokenType::LOG_OR: return 2;
+            case TokenType::LOG_AND: return 3;
+            case TokenType::BIN_OR: return 4;
+            case TokenType::XOR: return 5;
+            case TokenType::BIN_AND: return 6;
+            case TokenType::OR: return 7;
+            case TokenType::AND: return 8;
+            case TokenType::EQUALS:
+            case TokenType::BANG_EQUALS:
+            case TokenType::IS: return 9;
+            case TokenType::LESS:
+            case TokenType::LESS_EQUAL:
+            case TokenType::GREATER:
+            case TokenType::GREATER_EQUAL: return 10;
+            case TokenType::SHL: return 11;
+            case TokenType::SHR: return 12;
+            case TokenType::PLUS:
+            case TokenType::MINUS: return 13;
+            case TokenType::STAR:
+            case TokenType::SLASH:
+            case TokenType::MODULO: return 14;
+        default:
+            throw ParseError("Expected operator.", current().line, current().column, false, blockDepth);
+        }
+    }
+
+    Node makeBinary(Node lhs, Token op, Node rhs) {
+        Node result;
+        result.type = NodeType::BinaryExpressionNode;
+        result.enclosedToken = op;
+        result.children.push_back(lhs);
+        result.children.push_back(rhs);
+
+        return result;
+    }
+
+    Node parser::parseExpr(Node *lhs_ptr, int minPrecedence)
+    {
+        Node lhs;
+        if (lhs_ptr == nullptr) lhs = parsePrimary();
+        else lhs = *lhs_ptr;
+
+        while (isOperator(peek()) && opPrecedence(peek()) >= minPrecedence) {
+            advance();
+            Token op = current();
+            minPrecedence = opPrecedence(op);
+
+            if (op == TokenType::QUESTION) {
+                advance();
+                lhs = parseTernary(lhs, op);
+            }
+            else {
+                advance();
+                Node rhs = parseExpr(nullptr, minPrecedence + 1);
+                lhs = makeBinary(lhs, op, rhs);
+            }
+        }
+
+        return lhs;
+    }
+
+    Node parser::parseTernary(Node lhs, Token op)
+    {
+        Node result;
+        result.enclosedToken = op;
+        result.type = NodeType::TernaryExpressionNode;
+        result.children.push_back(lhs);
+        result.children.push_back(parseExpr());
+        expect(TokenType::COLON);
+        advance();
+        result.children.push_back(parseExpr());
+
+        return result;
+    }
+
+    Node parser::parsePrimary()
+    {
+        switch (current())
+        {
+        case TokenType::LPAREN: {
+            advance();
+            Node result = parseExpr();
+            expect(TokenType::RPAREN);
+            return result;
+        }
+        case TokenType::SIZEOF: {
+            Node result = makeCurrentNode(NodeType::UnaryExpressionNode);
+            expect(TokenType::LPAREN);
+            advance();
+            result.children.push_back(parseExpr());
+            expect(TokenType::RPAREN);
+            return result;
+        }
+        case TokenType::TYPEOF: {
+            Node result = makeCurrentNode(NodeType::UnaryExpressionNode);
+            expect(TokenType::LPAREN);
+            advance();
+            result.children.push_back(parseExpr());
+            expect(TokenType::RPAREN);
+            return result;
+        }
+        case TokenType::NEW: return parseNewExpr();
+        case TokenType::DELETE: return parseDeleteExpr();
+        case TokenType::PLUS_PLUS:
+        case TokenType::MINUS_MINUS:
+        case TokenType::BIN_AND:
+        case TokenType::STAR: return parsePreIden();
+        case TokenType::BIN_NOT:
+        case TokenType::BANG:
+        case TokenType::PLUS:
+        case TokenType::MINUS: return parsePreLiteral();
+        case TokenType::IDENTIFIER: return parseIdentifier();
+        case TokenType::INT_LITERAL:
+        case TokenType::FLOAT_LITERAL:
+        case TokenType::STRING_LITERAL: return makeCurrentNode(NodeType::LiteralNode);
+        case TokenType::INTERPOLATED_STRING: return parseInterpolatedString();
+        default:
+            throw ParseError("Unexpected primary token.", current().line, current().column, false, blockDepth);
+        }
+    }
+
+    Node parser::parsePreLiteral()
+    {
+        Node result = makeCurrentNode(NodeType::UnaryExpressionNode);
+        advance();
+        result.children.push_back(makeCurrentNode(NodeType::LiteralNode));
+
+        return result;
+    }
+
+    Node parser::parseInterpolatedString()
+    {
+        if (current().length != 0) {
+            throw ParseError("Unexpected primary token.", current().line, current().column, false, blockDepth);
+        }
+
+        Node result = makeCurrentNode(NodeType::LiteralNode);
+
+        advance();
+        while (current() != TokenType::INTERPOLATED_STRING && !atEnd()) {
+            result.children.push_back(parseExpr());
+            advance();
+        }
+        result.children.push_back(makeCurrentNode(NodeType::LiteralNode));
+
+        return result;
+    }
+
+    Node parser::parsePreIden()
+    {
+        Node result = makeCurrentNode(NodeType::UnaryExpressionNode);
+        advance();
+        result.children.push_back(parseIdentifier());
+
+        return result;
+    }
+
+    Node parser::parseIdentifier()
+    {
+        Node result = makeCurrentNode(NodeType::IdentifierNode);
+
+        if (peek() == TokenType::DOUBLE_COLON) {
+            advance();
+            result.type = NodeType::ModuleAccessNode;
+            expect(TokenType::IDENTIFIER);
+            result.children.push_back(parseIdentifier());
+        }
+        if (peek() == TokenType::DOT) {
+            advance();
+            result.type = NodeType::ObjectAccessNode;
+            expect(TokenType::IDENTIFIER);
+            result.children.push_back(parseIdentifier());
+        }
+        if (peek() == TokenType::ARROW) {
+            advance();
+            result.type = NodeType::PointerAccessNode;
+            expect(TokenType::IDENTIFIER);
+            result.children.push_back(parseIdentifier());
+        }
+
+        if (peek() == TokenType::LPAREN) {
+            advance();
+            Node iden = result;
+            result = makeCurrentNode(NodeType::FunctionCallNode);
+            result.children.push_back(iden);
+            result.children.push_back(parseArguments());
+        }
+
+        if (peek() == TokenType::PLUS_PLUS || peek() == TokenType::MINUS_MINUS) {
+            advance();
+            result.children.push_back(makeCurrentNode(NodeType::UnaryExpressionNode));
+        }
+
+        return result;
+    }
+
+    Node parser::parseNewExpr()
+    {
+        Node result = makeCurrentNode(NodeType::NewExpressionNode);
+        advance();
+        Node parent = parseType();
+
+        if (peek() == TokenType::LPAREN) {
+            advance();
+            Node type = parent;
+            parent = makeCurrentNode(NodeType::ConstructorCallNode);
+            parent.children.push_back(type);
+            parent.children.push_back(parseArguments());
+        } else if (peek() == TokenType::LBRACK) {
+            advance();
+            Node type = parent;
+            parent = makeCurrentNode(NodeType::ArraySubscriptNode);
+            advance();
+            parent.children.push_back(type);
+            parent.children.push_back(parseExpr());
+            expect(TokenType::RBRACK);
+        }
+
+        result.children.push_back(parent);
+        return result;
+    }
+
+    Node parser::parseDeleteExpr()
+    {
+        Node result = makeCurrentNode(NodeType::DeleteExpressionNode);
+
+        if (peek() == TokenType::LBRACK) {
+            advance(2);
+            if (current() != TokenType::RBRACK) {
+                result.children.push_back(parseExpr());
+                expect(TokenType::RBRACK);
+            }
+        }
+        advance();
+
+        result.children.push_back(parsePrimary());
+        return result;
+    }
+
+    Node parser::parseArguments()
+    {
+        Node result = makeCurrentNode(NodeType::ArgumentNode);
+
+        while (peek() != TokenType::RPAREN && !atEnd()) {
+            advance();
+            result.children.push_back(parseExpr());
+            if (peek() == TokenType::COMMA) {
+                advance();
+                if (peek() == TokenType::RPAREN) {
+                    throw ParseError("Expected argument following ','.", peek().line, peek().column, false, blockDepth);
                 }
             }
         }
-       // result.push_back(makeCurrentNode(NodeType::EndOfFileNode));
+        if (atEnd()) {
+            throw ParseError("Unterminated function call.", current().line, current().column, false, blockDepth);
+        }
+        advance();
+
+        return result;
+    }
+
+    Result<Node> parser::parseFile()
+    {
+        while (!atEnd()) {
+            parseTopLevelStatement();
+        }
+       result.push_back(makeCurrentNode(NodeType::EndOfFileNode));
        return {result, errors};
     }
-    Parser::Parser(vector<Token> *tokens)
+    parser::parser(vector<Token> *tokens)
     {
         this->tokens = tokens;
     }

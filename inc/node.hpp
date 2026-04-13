@@ -16,7 +16,11 @@ namespace Brass {
         ElseStmtNode, SwitchStmtNode, SwitchBlockNode, CaseStmtNode,
         DefaultStmtNode, ReturnStmtNode, TryCatchFinallyNode,
         CatchStmtNode, FinallyStmtNode, ThrowStmtNode, ThrowsStmtNode,
-        TypeNode
+        TypeNode, PointerNode, BinaryExpressionNode, TernaryExpressionNode,
+        UnaryExpressionNode, LiteralNode, ModuleAccessNode, ObjectAccessNode,
+        NewExpressionNode, DeleteExpressionNode, ArraySubscriptNode, 
+        ConstructorCallNode, FunctionCallNode, ArgumentNode, PointerAccessNode,
+        EndOfFileNode
     };
 
     struct Node {

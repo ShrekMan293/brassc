@@ -2,6 +2,7 @@
 #include "common.hpp"
 #include "printer.hpp"
 #include "token.hpp"
+#include "node.hpp"
 #include "result.hpp"
 #include <functional>
 #include <map>
@@ -13,6 +14,7 @@ namespace Brass {
         bool quiet = false;
         bool color = true;
         string printTokens = "";
+        string printAST = "";
         void* argList;
     };
 
@@ -41,7 +43,11 @@ namespace Brass {
         std::map<string, Arg> argumentList;
 
         void printTokens(vector<Token> tokens);
+        void printTree(vector<Node> ast);
+        void printNode(std::ofstream& ofs, Node node, int indent=0, vector<int> stops={});
+        void outNode(std::ostream& os, Node node);
         LexerResult runlexer(string file);
+        Result<Node> runParser(vector<Token> tokens);
 
         public:
         void run(bool* returnTo);

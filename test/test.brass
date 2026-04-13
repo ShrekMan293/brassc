@@ -1,8 +1,15 @@
-fn main(int argc, char** argv) {
-    var y -> u8 = 0x4;1
+fn main(argc -> int, argv -> char**) -> void {
+    var y -> u8 = 0x4;
     var z -> u8 = 0b1001;
     var y -> string = "dragon\n";
     var a -> string = $"{z} nig";
 
     return z+y;
+
+    if a + b * c {
+        return x;
+    }
+    elif b * a / (c ? 2 : 3) {
+        return a;
+    }
 }

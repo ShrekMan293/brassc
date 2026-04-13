@@ -1,0 +1,253 @@
+
+|
+|
+|
+|----FunctionDeclarationNode(main)
+|		|
+|		|
+|		|
+|		|----ParameterDeclarationNode(()
+|		|	|
+|		|	|
+|		|	|
+|		|	|----IdentifierNode(argc)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----TypeNode(int)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----IdentifierNode(argv)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----TypeNode(char)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----PointerNode(*)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----PointerNode(*)
+|		|
+|		|
+|		|
+|		|----TypeNode(void)
+|		|
+|		|
+|		|
+|		|----CodeBlockNode({)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----VariableDeclarationNode(var)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----IdentifierNode(y)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----TypeNode(u8)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----BinaryExpressionNode(=)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----IdentifierNode(y)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----LiteralNode(x4)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----VariableDeclarationNode(var)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----IdentifierNode(z)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----TypeNode(u8)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----BinaryExpressionNode(=)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----IdentifierNode(z)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----LiteralNode(b1001)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----VariableDeclarationNode(var)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----IdentifierNode(y)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----TypeNode(string)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----BinaryExpressionNode(=)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----IdentifierNode(y)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----LiteralNode(dragon\n)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----VariableDeclarationNode(var)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----IdentifierNode(a)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----TypeNode(string)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----BinaryExpressionNode(=)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----IdentifierNode(a)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----LiteralNode()
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|----IdentifierNode(z)
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|----LiteralNode({z} nig)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----ReturnStmtNode(return)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----BinaryExpressionNode(+)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----IdentifierNode(z)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----IdentifierNode(y)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----IfElseBlockNode(if)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----IfStmtNode(if)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----BinaryExpressionNode(+)
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|----IdentifierNode(a)
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|----BinaryExpressionNode(*)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----IdentifierNode(b)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----IdentifierNode(c)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----CodeBlockNode({)
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|----ReturnStmtNode(return)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----IdentifierNode(x)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----ElifStmtNode(elif)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----BinaryExpressionNode(/)
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|----BinaryExpressionNode(*)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----IdentifierNode(b)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----IdentifierNode(a)
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|----TernaryExpressionNode(?)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----IdentifierNode(c)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----LiteralNode(2)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----LiteralNode(3)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----CodeBlockNode({)
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|----ReturnStmtNode(return)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----IdentifierNode(a)
+|
+|
+|
+|----EndOfFileNode()

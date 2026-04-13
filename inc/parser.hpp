@@ -14,7 +14,7 @@ namespace Brass {
         ParseError(string msg, int line, int col, bool severe, int depth);
     };
 
-    class Parser {
+    class parser {
         vector<Node> result = {};
         vector<Error> errors = {};
 
@@ -74,16 +74,22 @@ namespace Brass {
 
         // Land on, leave on
         Node parseType();
-        Node parseGenericDeclaration();
         Node parseExpr(Node* lhs=nullptr, int minPrecedence=0);
+        Node parseTernary(Node lhs, Token op);
         Node parsePrimary();
         Node parsePreLiteral();
-        Node parseLiteral();
+        Node parseInterpolatedString();
         Node parsePreIden();
         Node parseIdentifier();
+        Node parseNewExpr();
+        Node parseDeleteExpr();
+        Node parseArguments();
+
+        bool isOperator(TokenType type);
+        int opPrecedence(TokenType type);
 
         public:
         Result<Node> parseFile();
-        Parser(vector<Token>* tokens);
+        parser(vector<Token>* tokens);
     };
 }

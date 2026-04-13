@@ -63,8 +63,12 @@ Brass::TokenType Brass::getTokenFromString(string str) {
 }
 
 string Brass::getStringFromToken(Brass::TokenType type) {
-    if (type >= TokenType::AND && type <= TokenType::THROWS)
-        return "'" + (string)magic_enum::enum_name(type) + "'";
+    if (type >= TokenType::AND && type <= TokenType::THROWS) {
+        string s = (string)magic_enum::enum_name(type);
+        std::transform(s.begin(), s.end(), s.begin(), 
+                   [](unsigned char c){ return std::tolower(c); });
+        return "'" +  s + "'";
+    }
 
     if (type == TokenType::LPAREN) return "'('";
     else if (type == TokenType::RPAREN) return "')'";
