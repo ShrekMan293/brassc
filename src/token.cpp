@@ -3,8 +3,14 @@
 #include <algorithm>
 #include <cctype>
 
+char oppositeCase(char c) {
+    if (c >= 'a' && c <= 'z') return c - 32;
+    else if (c >= 'A' && c <= 'Z') return c + 32;
+    else return c;
+}
+
 Brass::TokenType Brass::getTokenFromString(string str) {
-    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c){ return std::toupper(c);});
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c){ return oppositeCase(c);});
     auto result = magic_enum::enum_cast<TokenType>(str);
 
     if (result.has_value()) {

@@ -5,7 +5,7 @@ namespace Brass {
     void parser::advance(int off)
     {
         if (curPos + off >= tokens->size()) {
-            off = tokens->size() - curPos - 1;
+            off = tokens->size() - curPos;
         }
 
         curPos += off;
@@ -98,7 +98,7 @@ namespace Brass {
                     case TokenType::BREAK: {
                         Node stmt = Node();
                         stmt.enclosedToken = current();
-                        stmt.type = NodeType::BreakNode;
+                        stmt.type = NodeType::BreakStmtNode;
                         code.children.push_back(stmt);
                         advance();
                         break;
@@ -106,7 +106,7 @@ namespace Brass {
                     case TokenType::CONTINUE: {
                         Node stmt = Node();
                         stmt.enclosedToken = current();
-                        stmt.type = NodeType::ContinueNode;
+                        stmt.type = NodeType::ContinueStmtNode;
                         code.children.push_back(stmt);
                         advance();
                         break;
@@ -269,7 +269,7 @@ namespace Brass {
             Node throws = makeCurrentNode(NodeType::ThrowsStmtNode);
             while (!atEnd()) {
                 advance();
-                throws.children.push_back(parseIdentifier());
+                throws.children.push_back(parseIdentifier(true));
 
                 if (peek() == TokenType::COMMA) {
                     advance();
@@ -451,7 +451,7 @@ namespace Brass {
             Node throws = makeCurrentNode(NodeType::ThrowsStmtNode);
             while (!atEnd()) {
                 advance();
-                throws.children.push_back(parseIdentifier());
+                throws.children.push_back(parseIdentifier(true));
 
                 if (peek() == TokenType::COMMA) {
                     advance();
@@ -492,10 +492,10 @@ namespace Brass {
                 visibility->type = NodeType::VisibilityNode;
                 advance();
                 [[fallthrough]];
-            case TokenType::FN: return parseFunctionDecl(visibility, decl.children);
-            case TokenType::VAR: return parseVarDecl(visibility, decl.children);
-            case TokenType::IDENTIFIER: return parseConstructorDecl(visibility, decl.children);
-            case TokenType::BIN_NOT: return parseDestructorDecl(visibility, decl.children);
+            case TokenType::FN: parseFunctionDecl(visibility, decl.children); break;
+            case TokenType::VAR: parseVarDecl(visibility, decl.children); break;
+            case TokenType::IDENTIFIER: parseConstructorDecl(visibility, decl.children); break;
+            case TokenType::BIN_NOT: parseDestructorDecl(visibility, decl.children); break;
             default:
                 throw ParseError("Unexpected token as impl statement.", current().line, current().column, false, blockDepth);
             }
@@ -579,8 +579,16 @@ namespace Brass {
         if (peek() == TokenType::THROWS) {
             advance();
             Node throws = makeCurrentNode(NodeType::ThrowsStmtNode);
-            advance();
-            throws.children.push_back(parseIdentifier());
+            while (!atEnd()) {
+                advance();
+                throws.children.push_back(parseIdentifier(true));
+
+                if (peek() == TokenType::COMMA) {
+                    advance();
+                    continue;
+                }
+                break;
+            }
             decl.children.push_back(throws);
         }
 
@@ -646,8 +654,16 @@ namespace Brass {
         if (peek() == TokenType::THROWS) {
             advance();
             Node throws = makeCurrentNode(NodeType::ThrowsStmtNode);
-            advance();
-            throws.children.push_back(parseIdentifier());
+            while (!atEnd()) {
+                advance();
+                throws.children.push_back(parseIdentifier(true));
+
+                if (peek() == TokenType::COMMA) {
+                    advance();
+                    continue;
+                }
+                break;
+            }
             decl.children.push_back(throws);
         }
 
@@ -714,8 +730,16 @@ namespace Brass {
         if (peek() == TokenType::THROWS) {
             advance();
             Node throws = makeCurrentNode(NodeType::ThrowsStmtNode);
-            advance();
-            throws.children.push_back(parseIdentifier());
+            while (!atEnd()) {
+                advance();
+                throws.children.push_back(parseIdentifier(true));
+
+                if (peek() == TokenType::COMMA) {
+                    advance();
+                    continue;
+                }
+                break;
+            }
             decl.children.push_back(throws);
         }
 
@@ -750,7 +774,7 @@ namespace Brass {
 
     void parser::parseUsingStmt()
     {
-        Node decl = makeCurrentNode(NodeType::UsingStatementNode);
+        Node decl = makeCurrentNode(NodeType::UsingStmtNode);
 
         while (peek() != TokenType::SEMICOLON && !atEnd()) {
             if (peek() == TokenType::IDENTIFIER || peek() == TokenType::STAR) {
@@ -1267,27 +1291,32 @@ namespace Brass {
         return result;
     }
 
-    Node parser::parseIdentifier()
+    Node parser::parseIdentifier(bool typeParsing)
     {
+        if (current() != TokenType::IDENTIFIER) {
+            advance(-1);
+            expect(TokenType::IDENTIFIER);
+        }
+
         Node result = makeCurrentNode(NodeType::IdentifierNode);
 
         if (peek() == TokenType::DOUBLE_COLON) {
             advance();
             result.type = NodeType::ModuleAccessNode;
             expect(TokenType::IDENTIFIER);
-            result.children.push_back(parseIdentifier());
+            result.children.push_back(parseIdentifier(typeParsing));
         }
         if (peek() == TokenType::DOT) {
             advance();
             result.type = NodeType::ObjectAccessNode;
             expect(TokenType::IDENTIFIER);
-            result.children.push_back(parseIdentifier());
+            result.children.push_back(parseIdentifier(typeParsing));
         }
-        if (peek() == TokenType::ARROW) {
+        if (peek() == TokenType::ARROW && !typeParsing) {
             advance();
             result.type = NodeType::PointerAccessNode;
             expect(TokenType::IDENTIFIER);
-            result.children.push_back(parseIdentifier());
+            result.children.push_back(parseIdentifier(typeParsing));
         }
 
         if (peek() == TokenType::LPAREN) {
@@ -1393,7 +1422,6 @@ namespace Brass {
         while (!atEnd()) {
             parseTopLevelStatement();
         }
-       result.push_back(makeCurrentNode(NodeType::EndOfFileNode));
        return {result, errors};
     }
     parser::parser(vector<Token> *tokens)

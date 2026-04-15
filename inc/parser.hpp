@@ -81,7 +81,7 @@ namespace Brass {
         Node parsePreLiteral();
         Node parseInterpolatedString();
         Node parsePreIden();
-        Node parseIdentifier();
+        Node parseIdentifier(bool typeParsing=false);
         Node parseNewExpr();
         Node parseDeleteExpr();
         Node parseArguments();

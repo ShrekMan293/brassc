@@ -10,6 +10,14 @@ fn main(argc -> int, argv -> char**) -> void {
         return x;
     }
     elif b * a / (c ? 2 : 3) {
-        return ^;
+        return 3;
     }
+}
+
+enum TokenType -> u8 {
+    LPAREN, RPAREN
+}
+
+impl Life throws std::io::argumentexception -> void {
+    var unmanaged bob -> s32**;
 }
