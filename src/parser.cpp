@@ -164,6 +164,28 @@ namespace Brass {
 
         return result;
     }
+    vector<Node> parser::parseVariableModifiers()
+    {
+        vector<Node> result = {};
+        while (!atEnd())
+        {
+            switch (peek())
+            {
+            case TokenType::UNMANAGED:
+            case TokenType::VOLATILE:
+            case TokenType::MUT:
+            case TokenType::COMPTIME:
+            case TokenType::OVERRIDE:
+                advance();
+                result.push_back(makeCurrentNode(NodeType::VariableModifierNode));
+                break;
+            default:
+                return result;
+            }
+        }
+
+        return result;
+    }
 
     vector<Node> parser::parseTypeModifiers()
     {
@@ -192,9 +214,18 @@ namespace Brass {
 
         vector<Node> modifiers = parseFunctionModifiers();
         bool isExtern = false;
-        for (auto& node : modifiers) {
-            if (node.enclosedToken.type == TokenType::EXTERN)
-                isExtern = true;
+        if (peek() == TokenType::LPAREN) {
+            decl.type = NodeType::MethodDeclarationNode;
+            expect(TokenType::LPAREN);
+            advance();
+            decl.children.push_back(parseType());
+            expect(TokenType::RPAREN);
+        }
+        else {
+            for (auto& node : modifiers) {
+                if (node.enclosedToken.type == TokenType::EXTERN)
+                    isExtern = true;
+            }
         }
         if (visibility != nullptr) decl.children.push_back(*visibility);
         decl.children.insert(decl.children.end(), modifiers.begin(), modifiers.end());
@@ -236,8 +267,16 @@ namespace Brass {
         if (peek() == TokenType::THROWS) {
             advance();
             Node throws = makeCurrentNode(NodeType::ThrowsStmtNode);
-            advance();
-            throws.children.push_back(parseIdentifier());
+            while (!atEnd()) {
+                advance();
+                throws.children.push_back(parseIdentifier());
+
+                if (peek() == TokenType::COMMA) {
+                    advance();
+                    continue;
+                }
+                break;
+            }
             decl.children.push_back(throws);
         }
 
@@ -260,7 +299,10 @@ namespace Brass {
     void parser::parseVarDecl(Node *visibility, vector<Node>& tree)
     {
         Node decl = makeCurrentNode(NodeType::VariableDeclarationNode);
+
+        vector<Node> modifiers = parseVariableModifiers();
         if (visibility != nullptr) decl.children.push_back(*visibility);
+        decl.children.insert(decl.children.end(), modifiers.begin(), modifiers.end());
 
         expect(TokenType::IDENTIFIER);
         Node iden = makeCurrentNode(NodeType::IdentifierNode);
@@ -403,6 +445,21 @@ namespace Brass {
         if (peek() == TokenType::FROM) {
             advance(2);
             decl.children.push_back(parseType());
+        }
+        if (peek() == TokenType::THROWS) {
+            advance();
+            Node throws = makeCurrentNode(NodeType::ThrowsStmtNode);
+            while (!atEnd()) {
+                advance();
+                throws.children.push_back(parseIdentifier());
+
+                if (peek() == TokenType::COMMA) {
+                    advance();
+                    continue;
+                }
+                break;
+            }
+            decl.children.push_back(throws);
         }
 
         expect(TokenType::ARROW);
@@ -1154,11 +1211,13 @@ namespace Brass {
         case TokenType::BANG:
         case TokenType::PLUS:
         case TokenType::MINUS: return parsePreLiteral();
+        case TokenType::SELF:
         case TokenType::IDENTIFIER: return parseIdentifier();
         case TokenType::INT_LITERAL:
         case TokenType::FLOAT_LITERAL:
         case TokenType::STRING_LITERAL: return makeCurrentNode(NodeType::LiteralNode);
         case TokenType::INTERPOLATED_STRING: return parseInterpolatedString();
+        case TokenType::REINTERPRET: return parseReinterpretCast();
         default:
             throw ParseError("Unexpected primary token.", current().line, current().column, false, blockDepth);
         }
@@ -1199,7 +1258,10 @@ namespace Brass {
     Node parser::parsePreIden()
     {
         Node result = makeCurrentNode(NodeType::UnaryExpressionNode);
-        expect(TokenType::IDENTIFIER);
+        if (peek() != TokenType::IDENTIFIER && peek() != TokenType::SELF) {
+            throw ParseError("Expected identifier or self.", peek().line, peek().column, false, blockDepth);
+        }
+        advance();
         result.children.push_back(parseIdentifier());
 
         return result;
@@ -1307,6 +1369,23 @@ namespace Brass {
         advance();
 
         return result;
+    }
+
+    Node parser::parseReinterpretCast()
+    {
+        Node decl = makeCurrentNode(NodeType::ReinterpretCastNode);
+        expect(TokenType::LESS);
+        advance();
+
+        decl.children.push_back(parseType());
+        expect(TokenType::GREATER);
+        expect(TokenType::LPAREN);
+        advance();
+
+        decl.children.push_back(parseExpr());
+        expect(TokenType::RPAREN);
+
+        return decl;
     }
 
     Result<Node> parser::parseFile()

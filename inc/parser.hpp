@@ -33,6 +33,7 @@ namespace Brass {
 
         // Land ahead, leave on
         vector<Node> parseFunctionModifiers();
+        vector<Node> parseVariableModifiers();
         vector<Node> parseTypeModifiers();
 
         // Land on, leave ahead
@@ -84,6 +85,7 @@ namespace Brass {
         Node parseNewExpr();
         Node parseDeleteExpr();
         Node parseArguments();
+        Node parseReinterpretCast();
 
         bool isOperator(TokenType type);
         int opPrecedence(TokenType type);
