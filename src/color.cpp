@@ -46,7 +46,7 @@ Brass::ColorData::ColorData(bool quiet)
     }
 }
 #else
-Brass::ColorType::ColorType(bool quiet)
+Brass::ColorData::ColorData(bool quiet)
 {
     if (quiet) {
         mode = ColorMode::NOCOLOR;

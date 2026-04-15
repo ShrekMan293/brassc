@@ -7,13 +7,13 @@ namespace Brass {
     };
     struct Error {
         string file;
-        const char* message;
+        string message;
         int line;
         int column;
 
         ErrorType severity;
 
-        Error(string file, const char* msg, int line, int column, ErrorType severity);
+        Error(string file, string msg, int line, int column, ErrorType severity);
     };
 
     template <typename T>

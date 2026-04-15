@@ -10,6 +10,6 @@ fn main(argc -> int, argv -> char**) -> void {
         return x;
     }
     elif b * a / (c ? 2 : 3) {
-        return a;
+        return ^;
     }
 }

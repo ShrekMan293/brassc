@@ -74,7 +74,7 @@
 ./test/test.brass:12:28: RPAREN())
 ./test/test.brass:12:30: LBRACE({)
 ./test/test.brass:13:9: RETURN(return)
-./test/test.brass:13:16: IDENTIFIER(a)
+./test/test.brass:13:16: XOR(^)
 ./test/test.brass:13:17: SEMICOLON(;)
 ./test/test.brass:14:5: RBRACE(})
 ./test/test.brass:15:1: RBRACE(})

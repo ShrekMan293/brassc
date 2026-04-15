@@ -59,7 +59,7 @@ namespace Brass {
                 throw ParseError("Unexpected token as top level statement.", current().line, current().column, true, 0);
             }
         } catch (ParseError& err) {
-            errors.push_back(Error(current().file, err.msg.c_str(), err.line, err.col, ErrorType::ERR));
+            errors.push_back(Error(current().file, err.msg, err.line, err.col, ErrorType::ERR));
             if (err.severe) {
                 while (this->blockDepth != 0 && !atEnd()) {
                     advance();
@@ -115,6 +115,7 @@ namespace Brass {
                     case TokenType::TRY: parseTryCatchStmt(code.children); break;
                     case TokenType::THROW: parseThrowStmt(code.children); break;
                     case TokenType::LBRACE: parseInnerStatement(code.children); break;
+                    case TokenType::SEMICOLON: advance(); break;
                     default: parseExpr(); expect(TokenType::SEMICOLON); advance(); break;
                 }
             } catch (ParseError& e) {
@@ -123,7 +124,6 @@ namespace Brass {
                     while (this->blockDepth != blockDepth && this->blockDepth != 0 && !atEnd()) {
                         advance();
                     }
-                    advance();
                 } else {
                     while (!atEnd()) {
                         if (current() == TokenType::LBRACE || current() == TokenType::RBRACE
@@ -1167,6 +1167,11 @@ namespace Brass {
     Node parser::parsePreLiteral()
     {
         Node result = makeCurrentNode(NodeType::UnaryExpressionNode);
+        if (peek() != TokenType::INT_LITERAL && peek() != TokenType::FLOAT_LITERAL &&
+            peek() != TokenType::STRING_LITERAL && peek() != TokenType::INTERPOLATED_STRING &&
+            peek() != TokenType::DEFAULT && peek() != TokenType::NULL) {
+            throw ParseError("Expected literal.", peek().line, peek().column, false, blockDepth);
+        }
         advance();
         result.children.push_back(makeCurrentNode(NodeType::LiteralNode));
 
@@ -1194,7 +1199,7 @@ namespace Brass {
     Node parser::parsePreIden()
     {
         Node result = makeCurrentNode(NodeType::UnaryExpressionNode);
-        advance();
+        expect(TokenType::IDENTIFIER);
         result.children.push_back(parseIdentifier());
 
         return result;
