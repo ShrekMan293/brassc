@@ -29,7 +29,6 @@ namespace Brass {
 		Mutable,
 		Comptime,
 		Primitive,
-		Abstract,
 		Packed,
     };
 

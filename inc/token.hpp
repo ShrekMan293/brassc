@@ -3,6 +3,8 @@
 #undef NULL
 #undef EOF
 
+char oppositeCase(char c);
+
 namespace Brass
 {
     enum class TokenType {
@@ -53,7 +55,7 @@ namespace Brass
         // Types
         U8, S8, U16, S16,
         U32, S32, U64, S64,
-        F32, F64,
+        F32, F64, VOID,
 
         // Aliases
         CHAR, BOOL, BYTE,

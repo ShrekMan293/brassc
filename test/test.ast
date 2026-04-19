@@ -239,6 +239,94 @@
 |		|	|	|	|
 |		|	|	|	|
 |		|	|	|	|----CodeBlockNode({)
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|----ReturnStmtNode(return)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----LiteralNode(3)
+|
+|
+|
+|----EnumDeclarationNode(enum)
+|		|
+|		|
+|		|
+|		|----IdentifierNode(TokenType)
+|		|
+|		|
+|		|
+|		|----TypeNode(u8)
+|		|
+|		|
+|		|
+|		|----EnumBlockNode({)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----IdentifierNode(LPAREN)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----IdentifierNode(RPAREN)
+|
+|
+|
+|----ImplDeclarationNode(impl)
+|		|
+|		|
+|		|
+|		|----IdentifierNode(Life)
+|		|
+|		|
+|		|
+|		|----ThrowsStmtNode(throws)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----ModuleAccessNode(std)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----ModuleAccessNode(io)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----IdentifierNode(argumentexception)
+|		|
+|		|
+|		|
+|		|----TypeNode(void)
+|		|
+|		|
+|		|
+|		|----ImplBlockNode({)
+|		|	|
+|		|	|
+|		|	|
+|		|	|----VariableDeclarationNode(var)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----VariableModifierNode(unmanaged)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----IdentifierNode(bob)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----TypeNode(s32)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----PointerNode(*)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----PointerNode(*)
 |
 |
 |

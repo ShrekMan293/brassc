@@ -4,6 +4,7 @@
 #include "token.hpp"
 #include "node.hpp"
 #include "result.hpp"
+#include "symbol.hpp"
 #include <functional>
 #include <map>
 

@@ -3,24 +3,34 @@
 
 namespace Brass {
     enum class NodeType {
-        VisibilityNode, FunctionDeclarationNode, FunctionModifierNode,
-        ParameterDeclarationNode, VariableDeclarationNode,
-        IdentifierNode, TypeDeclarationNode, GenericDeclarationNode,
-        TypeBlockNode, EnumDeclarationNode, EnumBlockNode,
-        ImplDeclarationNode, ImplBlockNode, OperatorDeclarationNode,
-        ConstructorDeclarationNode, DestructorDeclarationNode,
-        GenericReferenceNode, TypeModifierNode, ExceptionDeclarationNode,
-        UsingStatementNode, CodeBlockNode, BreakNode, ContinueNode,
-        DoWhileStmtNode, WhileStmtNode, TimesStmtNode, ForStmtNode,
-        ForeachStmtNode, IfElseBlockNode, IfStmtNode, ElifStmtNode,
-        ElseStmtNode, SwitchStmtNode, SwitchBlockNode, CaseStmtNode,
+        // Declaration
+        FunctionDeclarationNode, ParameterDeclarationNode, VariableDeclarationNode,
+        TypeDeclarationNode, GenericDeclarationNode, EnumDeclarationNode, 
+        ImplDeclarationNode, OperatorDeclarationNode, ConstructorDeclarationNode,
+        DestructorDeclarationNode, ExceptionDeclarationNode, MethodDeclarationNode, 
+
+        // Blocks
+        TypeBlockNode, EnumBlockNode, ImplBlockNode, CodeBlockNode,
+        SwitchBlockNode, IfElseBlockNode, 
+
+        // Modifiers
+        VisibilityNode, FunctionModifierNode, TypeModifierNode, VariableModifierNode, 
+
+        // Statements
+        UsingStmtNode, BreakStmtNode, ContinueStmtNode, DoWhileStmtNode,
+        WhileStmtNode, TimesStmtNode, ForStmtNode, ForeachStmtNode,
+        IfStmtNode, ElifStmtNode, ElseStmtNode, SwitchStmtNode, CaseStmtNode,
         DefaultStmtNode, ReturnStmtNode, TryCatchFinallyNode,
         CatchStmtNode, FinallyStmtNode, ThrowStmtNode, ThrowsStmtNode,
-        TypeNode, PointerNode, BinaryExpressionNode, TernaryExpressionNode,
-        UnaryExpressionNode, LiteralNode, ModuleAccessNode, ObjectAccessNode,
-        NewExpressionNode, DeleteExpressionNode, ArraySubscriptNode, 
+
+        // Expressions
+        BinaryExpressionNode, TernaryExpressionNode, UnaryExpressionNode,
+        NewExpressionNode, DeleteExpressionNode, 
+        
+        IdentifierNode, GenericReferenceNode, TypeNode, PointerNode, 
+        LiteralNode, ModuleAccessNode, ObjectAccessNode, ArraySubscriptNode, 
         ConstructorCallNode, FunctionCallNode, ArgumentNode, PointerAccessNode,
-        VariableModifierNode, MethodDeclarationNode, ReinterpretCastNode, ReferenceNode, EndOfFileNode
+        ReinterpretCastNode, ReferenceNode
     };
 
     struct Node {

@@ -40,12 +40,12 @@ namespace Brass {
                     buffer += code[i++];
 
                 string copy = string(buffer);
-                std::transform(copy.begin(), copy.end(), copy.begin(), [](unsigned char c){ return std::toupper(c);});
+                std::transform(copy.begin(), copy.end(), copy.begin(), [](unsigned char c){ return oppositeCase(c);});
                 auto type = magic_enum::enum_cast<TokenType>(copy);
 
                 if (type.has_value()) {
                     if (type.value() >= TokenType::AND && type.value() <= TokenType::THROWS) {
-                        if (type.value() >= TokenType::U8 && type.value() <= TokenType::F64) {
+                        if (type.value() >= TokenType::U8 && type.value() <= TokenType::DOUBLE) {
                             colorData.print(TokenColor::Type, buffer);
                             buffer = "";
                             i--;
@@ -163,7 +163,7 @@ namespace Brass {
         colorData.print(TokenColor::Error, "ERROR: ");
         colorData.print(TokenColor::Error, msg);
 
-        print("\n   " + std::to_string(line) + " | ");
+        print("\n  " + std::to_string(line) + " | ");
         print_code(code);
         print("\n     | ");
         for (int i = 0; i < column - 1; i++) print(" ");
@@ -193,7 +193,7 @@ namespace Brass {
         colorData.print(TokenColor::Warning, "WARNING: ");
         colorData.print(TokenColor::Warning, msg);
 
-        print("\n   " + std::to_string(line) + " | ");
+        print("\n  " + std::to_string(line) + " | ");
         print_code(code);
         print("\n     | ");
         for (int i = 0; i < column - 1; i++) print(" ");
@@ -225,7 +225,7 @@ namespace Brass {
         colorData.print(TokenColor::Info, "NOTE: ");
         colorData.print(TokenColor::Info, msg);
 
-        print("\n   " + std::to_string(line) + " | ");
+        print("\n  " + std::to_string(line) + " | ");
         print_code(code);
         print("\n     | ");
         for (int i = 0; i < column - 1; i++) print(" ");
