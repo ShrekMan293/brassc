@@ -69,14 +69,14 @@ namespace Brass {
         Token t;
         t.column = lpos;
         t.file = file;
-        t.start = fpos;
+        int start = fpos;
         t.line = line;
         
         while ((isalnum(current()) || current() == '_') && !atEnd())
             advance();
         
-        t.length = fpos - t.start;
-        t.type = getTokenFromString(source->substr(t.start, t.length));
+        t.value = source->substr(start, fpos - start);
+        t.type = getTokenFromString(string(t.value));
         if (t.type == TokenType::UNKNOWN) t.type = TokenType::IDENTIFIER;
 
         tokens.push_back(t);
@@ -96,26 +96,26 @@ namespace Brass {
         Token t;
         t.column = lpos;
         t.file = file;
-        t.start = fpos;
+        int start = fpos;
         t.line = line;
 
         while (!isalnum(current()) && !std::isspace(current()) && !atEnd()) {
             advance();
         }
 
-        t.length = fpos - t.start;
+        t.value = source->substr(start, fpos - start);
 
         do {
-            t.type = getTokenFromString(source->substr(t.start, t.length));
+            t.type = getTokenFromString(string(t.value));
             if (t.type == TokenType::UNKNOWN) {
                 advance(-1);
-                t.length--;
+                t.value = source->substr(start, 1);
             }
             else {
                 break;
             }
         }
-        while (t.length != 0);
+        while (t.value.length() != 0);
 
         if (t.type == TokenType::UNKNOWN) {
             error("Unknown token.", t.line, t.column);
@@ -142,7 +142,7 @@ namespace Brass {
         Token t;
         t.column = lpos;
         t.file = file;
-        t.start = fpos;
+        int start = fpos;
         t.line = line;
         t.type = TokenType::INT_LITERAL;
 
@@ -150,7 +150,7 @@ namespace Brass {
         while ((current() == '0' || current() == '1') && !atEnd())
             advance();
 
-        t.length = fpos - t.start;
+        t.value = source->substr(start, fpos - start);
         tokens.push_back(t);
     }
 
@@ -165,7 +165,7 @@ namespace Brass {
         Token t;
         t.column = lpos;
         t.file = file;
-        t.start = fpos;
+        int start = fpos;
         t.line = line;
         t.type = TokenType::INT_LITERAL;
 
@@ -173,7 +173,7 @@ namespace Brass {
         while (isHex(current()) && !atEnd())
             advance();
 
-        t.length = fpos - t.start;
+        t.value = source->substr(start, fpos - start);
         tokens.push_back(t);
     }
     void lexer::lexDecimalNumber()
@@ -181,7 +181,7 @@ namespace Brass {
         Token t;
         t.column = lpos;
         t.file = file;
-        t.start = fpos;
+        int start = fpos;
         t.line = line;
 
         bool hasDot = false;
@@ -191,7 +191,7 @@ namespace Brass {
             advance();
         }
 
-        t.length = fpos - t.start;
+        t.value = source->substr(start, fpos - start);
         t.type = hasDot ? TokenType::FLOAT_LITERAL : TokenType::INT_LITERAL;
         tokens.push_back(t);
     }
@@ -200,7 +200,7 @@ namespace Brass {
         Token t;
         t.column = lpos;
         t.file = file;
-        t.start = fpos + 1;
+        int start = fpos + 1;
         t.line = line;
         t.type = TokenType::INT_LITERAL;
         advance();
@@ -208,7 +208,7 @@ namespace Brass {
         while (current() != '\'' && !atEnd())
             advance();
 
-        t.length = fpos - t.start;
+        t.value = source->substr(start, fpos - start);
 
         if (atEnd()) {
             error("Unterminated char literal.", t.line, t.column);
@@ -221,7 +221,7 @@ namespace Brass {
         Token t;
         t.column = lpos;
         t.file = file;
-        t.start = fpos + 1;
+        int start = fpos + 1;
         t.line = line;
         t.type = TokenType::STRING_LITERAL;
         advance();
@@ -229,7 +229,7 @@ namespace Brass {
         while (current() != '"' && !atEnd())
             advance();
 
-        t.length = fpos - t.start;
+        t.value = source->substr(start, fpos - start);
 
         if (atEnd()) {
             error("Unterminated string literal.", t.line, t.column);
@@ -242,10 +242,10 @@ namespace Brass {
         Token t;
         t.column = lpos;
         t.file = file;
-        t.start = fpos + 2;
+        int start = fpos + 2;
         t.line = line;
         t.type = TokenType::INTERPOLATED_STRING;
-        t.length = 0;
+        t.value = "";
         tokens.push_back(t);
         advance(2);
 
@@ -260,7 +260,7 @@ namespace Brass {
             advance();
         }
 
-        t.length = fpos - t.start;
+        t.value = source->substr(start, fpos - start);
 
         if (atEnd()) {
             error("Unterminated string literal.", t.line, t.column);
@@ -280,7 +280,7 @@ namespace Brass {
 
             lexCurrent();
         }
-        tokens.push_back((Token){TokenType::EOF, fpos, 0, file, line, lpos});
+        tokens.push_back((Token){TokenType::EOF, "", file, line, lpos});
 
         return {tokens, errors, lineStarts};
     }

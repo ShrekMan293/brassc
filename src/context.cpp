@@ -1,13 +1,31 @@
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "symbol.hpp"
 
 #include <fstream>
 #include <thread>
+#include <filesystem>
 #include "context.hpp"
 #include "threadpool.hpp"
 #include "magic_enum/magic_enum.hpp"
 
 namespace Brass {
+    #ifdef _WIN32
+    #include <windows.h>
+    string getDefaultLibararyPath() {
+        char path[MAX_PATH];
+        if (!GetModuleFileName(NULL, path, MAX_PATH)) {
+            std::cout << "Error: " << GetLastError() << '\n';
+        }
+
+        return string(path) + "/";
+    }
+    #else
+    string getDefaultLibararyPath() {
+        return "/usr/lib/";
+    }
+    #endif
+
     void BrassContext::InitArguments()
     {
         MakeArgument("--single-thread", "Make compiler run in single thread mode.", ArgUsage::NONE, 
@@ -20,6 +38,12 @@ namespace Brass {
             [](BrassConfiguration* ctx, const std::string& param){ ctx->printTokens = param; });
         MakeArgument("-ea", "--emit-ast", "Print ast to a file.", ArgUsage::FILE, 
             [](BrassConfiguration* ctx, const std::string& param){ ctx->printAST = param; });
+        MakeArgument("-ea", "--emit-ast", "Print ast to a file.", ArgUsage::FILE, 
+            [](BrassConfiguration* ctx, const std::string& param){ ctx->printAST = param; });
+        MakeArgument("-L", "--libdir", "Sets directory to search for library.", ArgUsage::FILE, 
+            [](BrassConfiguration* ctx, const std::string& param){ ctx->libDirs.push_back(param); });
+        MakeArgument("-l", "--lib", "Adds library at given path.", ArgUsage::FILE, 
+            [](BrassConfiguration* ctx, const std::string& param){ ctx->libraries.push_back(param); });
         MakeArgument("-v", "--version", "Print the Brass Version.", ArgUsage::NONE, 
             [](BrassConfiguration* ctx, const std::string& param){ std::cout << BRASSC << '\n'; });
         MakeArgument("-h", "--help", "Print this help message.", ArgUsage::NONE, 
@@ -31,10 +55,10 @@ namespace Brass {
                 {
                     string message = pair.first + " ";
                     if (pair.second.usage == ArgUsage::FILE) {
-                        message += "<file>";
+                        message += "<path>";
                     }
                     else if (pair.second.usage == ArgUsage::FILES) {
-                        message += "<file(s)>";
+                        message += "<path(s)>";
                     }
                     int toPrint = 32 - message.length();
                     std::cout << message;
@@ -89,15 +113,14 @@ namespace Brass {
 
         for (auto& token : tokens) {
             ofs << token.file << ":" << token.line << ":" << token.column << ": " << magic_enum::enum_name(token.type)
-                << "(" << sources[token.file].source.substr(token.start, token.length) << ")\n";
+                << "(" << token.value << ")\n";
         }
 
         ofs.close();
     }
 
     void BrassContext::outNode(std::ostream& os, Node node) {
-        os << magic_enum::enum_name(node.type) << "(" 
-            << sources[node.enclosedToken.file].source.substr(node.enclosedToken.start, node.enclosedToken.length) << ")";
+        os << magic_enum::enum_name(node.type) << "(" << node.enclosedToken.value << ")";
     }
 
     void BrassContext::printNode(std::ofstream& ofs, Node node, int indent, vector<int> stops) {
@@ -167,6 +190,72 @@ namespace Brass {
         return parse.parseFile();
     }
 
+    vector<string> BrassContext::getModules(bool *returnTo)
+    {
+        vector<string> result = {};
+
+        for (auto lib : cfg.libraries) {
+            bool found = false;
+            for (auto dir : cfg.libDirs) {
+                string s = dir + lib + ".bmi";
+                if (std::filesystem::is_regular_file(s)) {
+                    result.push_back(s);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                std::cout << "\e[1;31mLibrary '" << lib << "' does not exist.\n\e[0m";
+                *returnTo = true;
+            }
+        }
+
+        return result;
+    }
+
+    vector<Symbol> BrassContext::parseModule(string path) {
+        std::ifstream ifs(path, std::ios::binary | std::ios::ate);
+        size_t length = ifs.tellg();
+        ifs.seekg(ifs.beg);
+        uint8_t* buffer = new uint8_t[length];
+
+        ifs.read(reinterpret_cast<char*>(buffer), length);
+
+        vector<Symbol> symbols = {};
+        for (size_t pos = 0; pos < length; pos++) {
+            if (!(buffer[pos] == 'B' && buffer[pos + 1] == 'R' && buffer[pos + 2] == 'C' &&
+                buffer[pos + 3] == '0' && buffer[pos + 4] == '0' && buffer[pos + 5] == '1')) 
+            {
+                std::cout << "\e[1;31mLibrary '" << path << "' has a corrupted module file.\n\e[0m";
+                break;
+            }
+            pos += 6;
+
+            uint16_t modCount;
+            memcpy(&modCount, buffer + pos, 2);
+            pos += 3;
+
+            for (uint16_t i = 0; i < modCount; i++) {
+                uint16_t symCount;
+                memcpy(&symCount, buffer + pos, 2);
+                pos += 3;
+
+                string name = reinterpret_cast<char*>(buffer + pos);
+                pos += name.length() + 1;
+
+                for (uint16_t j = 0; j < symCount; j++) {
+                    symbols.push_back(parseSymbol(buffer, pos, name));
+                }
+            }
+        }
+    }
+
+    Symbol BrassContext::parseSymbol(uint8_t *buffer, size_t &pos, string_view module)
+    {
+        Symbol s;
+    }
+
     void BrassContext::run(bool* returnTo) {
         ThreadPool pool = ThreadPool();
         vector<std::future<LexerResult>> lexFutures;
@@ -221,6 +310,7 @@ namespace Brass {
         vector<string> files = {};
         cfg = BrassConfiguration();
         cfg.argList = reinterpret_cast<void*>(&argumentList);
+        cfg.libDirs.push_back(getDefaultLibararyPath());
         InitArguments();
 
         for (int i = 1; i < argc; i++) {
@@ -231,7 +321,7 @@ namespace Brass {
                     argument.code(&this->cfg, "");
                 } else if (argument.usage == ArgUsage::FILE) {
                     if (i + 1 >= argc) {
-                        std::cout << "\e[1;31mNo file given for argument '" << argv[i] << ".\n\e[0m";
+                        std::cout << "\e[1;31mNo file given for argument '" << argv[i] << "'.\n\e[0m";
                         *returnTo = true;
                         break;
                     }
@@ -239,7 +329,7 @@ namespace Brass {
                     i++;
                 } else {
                     if (i + 1 >= argc) {
-                        std::cout << "\e[1;31mNo file given for argument '" << argv[i] << ".\n\e[0m";
+                        std::cout << "\e[1;31mNo file given for argument '" << argv[i] << "'.\n\e[0m";
                         break;
                     }
                     

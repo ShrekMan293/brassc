@@ -197,6 +197,7 @@ namespace Brass {
             case TokenType::PRIMITIVE:
             case TokenType::ABSTRACT:
             case TokenType::SEALED:
+            case TokenType::PACKED:
                 advance();
                 result.push_back(makeCurrentNode(NodeType::TypeModifierNode));
                 break;
@@ -231,8 +232,7 @@ namespace Brass {
         decl.children.insert(decl.children.end(), modifiers.begin(), modifiers.end());
 
         expect(TokenType::IDENTIFIER);
-        decl.enclosedToken.start = current().start;
-        decl.enclosedToken.length = current().length;
+        decl.enclosedToken.value = current().value;
 
         expect(TokenType::LPAREN);
         Node parameterNode = makeCurrentNode(NodeType::ParameterDeclarationNode);
@@ -512,7 +512,11 @@ namespace Brass {
     void parser::parseOperatorDecl(Node *visibility)
     {
         Node decl = makeCurrentNode(NodeType::OperatorDeclarationNode);
+
+        vector<Node> modifiers = parseFunctionModifiers();
         if (visibility != nullptr) decl.children.push_back(*visibility);
+        decl.children.insert(decl.children.end(), modifiers.begin(), modifiers.end());
+
         advance();
         Node type = parseType();
         advance();
@@ -540,7 +544,7 @@ namespace Brass {
         case TokenType::LPAREN:
             decl.enclosedToken = current();
             expect(TokenType::RPAREN);
-            decl.enclosedToken.length = 2;
+            decl.enclosedToken.value = "()";
             break;
         default:
             throw ParseError("Unexpected token, cannot overload this operator.", current().line, current().column, false, blockDepth);
@@ -1039,6 +1043,10 @@ namespace Brass {
             advance();
             parent.children.push_back(makeCurrentNode(NodeType::PointerNode));
         }
+        while (peek() == TokenType::BIN_AND) {
+            advance();
+            parent.children.push_back(makeCurrentNode(NodeType::ReferenceNode));
+        }
 
         return parent;
     }
@@ -1239,7 +1247,7 @@ namespace Brass {
 
     Node parser::parseInterpolatedString()
     {
-        if (current().length != 0) {
+        if (current().value != "") {
             throw ParseError("Unexpected primary token.", current().line, current().column, false, blockDepth);
         }
 

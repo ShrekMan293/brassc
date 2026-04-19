@@ -15,6 +15,8 @@ namespace Brass {
         bool color = true;
         string printTokens = "";
         string printAST = "";
+        vector<string> libDirs = {};
+        vector<string> libraries = {"std"};
         void* argList;
     };
 
@@ -48,6 +50,10 @@ namespace Brass {
         void outNode(std::ostream& os, Node node);
         LexerResult runlexer(string file);
         Result<Node> runParser(vector<Token> tokens);
+
+        vector<string> getModules(bool* returnTo);
+        vector<Symbol> parseModule(string path);
+        Symbol parseSymbol(uint8_t* buffer, size_t& pos, string_view module);
 
         public:
         void run(bool* returnTo);

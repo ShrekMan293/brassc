@@ -20,7 +20,7 @@ namespace Brass {
         UnaryExpressionNode, LiteralNode, ModuleAccessNode, ObjectAccessNode,
         NewExpressionNode, DeleteExpressionNode, ArraySubscriptNode, 
         ConstructorCallNode, FunctionCallNode, ArgumentNode, PointerAccessNode,
-        VariableModifierNode, MethodDeclarationNode, ReinterpretCastNode, EndOfFileNode
+        VariableModifierNode, MethodDeclarationNode, ReinterpretCastNode, ReferenceNode, EndOfFileNode
     };
 
     struct Node {

@@ -91,7 +91,7 @@ namespace Brass
         MUT, COMPTIME,
 
         // Type Modifiers
-        PRIMITIVE,
+        PRIMITIVE, PACKED,
 
         // Memory
         NEW, DELETE, 
@@ -113,8 +113,7 @@ namespace Brass
     struct Token
     {
         TokenType type;
-        size_t start;
-        size_t length;
+        string_view value;
         
         string file;
         int line;
