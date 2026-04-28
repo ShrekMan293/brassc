@@ -2,7 +2,7 @@
 #include "type.hpp"
 
 namespace Brass {
-    enum class SymbolKind {
+    enum class SymbolKind : uint8_t {
 		Variable,
 		Function,
 		Enum,

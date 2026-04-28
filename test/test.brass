@@ -4,7 +4,7 @@ fn main(argc -> int, argv -> char**) -> void {
     var y -> string = "dragon\n";
     var a -> string = $"{z} nig";
 
-    return z+y;
+    return z + y;
 
     if a + b * c {
         return x;
@@ -18,6 +18,6 @@ enum TokenType -> u8 {
     LPAREN, RPAREN
 }
 
-impl Life throws std::io::argumentexception -> void {
+impl Life -> void {
     var unmanaged bob -> s32**;
 }

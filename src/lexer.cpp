@@ -75,7 +75,7 @@ namespace Brass {
         while ((isalnum(current()) || current() == '_') && !atEnd())
             advance();
         
-        t.value = source->substr(start, fpos - start);
+        t.value = string_view(*source).substr(start, fpos - start);
         t.type = getTokenFromString(string(t.value));
         if (t.type == TokenType::UNKNOWN) t.type = TokenType::IDENTIFIER;
 
@@ -103,13 +103,13 @@ namespace Brass {
             advance();
         }
 
-        t.value = source->substr(start, fpos - start);
+        t.value = string_view(*source).substr(start, fpos - start);
 
         do {
             t.type = getTokenFromString(string(t.value));
             if (t.type == TokenType::UNKNOWN) {
                 advance(-1);
-                t.value = source->substr(start, 1);
+                t.value = string_view(*source).substr(start, 1);
             }
             else {
                 break;
@@ -150,7 +150,7 @@ namespace Brass {
         while ((current() == '0' || current() == '1') && !atEnd())
             advance();
 
-        t.value = source->substr(start, fpos - start);
+        t.value = string_view(*source).substr(start, fpos - start);
         tokens.push_back(t);
     }
 
@@ -173,7 +173,7 @@ namespace Brass {
         while (isHex(current()) && !atEnd())
             advance();
 
-        t.value = source->substr(start, fpos - start);
+        t.value = string_view(*source).substr(start, fpos - start);
         tokens.push_back(t);
     }
     void lexer::lexDecimalNumber()
@@ -191,7 +191,7 @@ namespace Brass {
             advance();
         }
 
-        t.value = source->substr(start, fpos - start);
+        t.value = string_view(*source).substr(start, fpos - start);
         t.type = hasDot ? TokenType::FLOAT_LITERAL : TokenType::INT_LITERAL;
         tokens.push_back(t);
     }
@@ -208,7 +208,7 @@ namespace Brass {
         while (current() != '\'' && !atEnd())
             advance();
 
-        t.value = source->substr(start, fpos - start);
+        t.value = string_view(*source).substr(start, fpos - start);
 
         if (atEnd()) {
             error("Unterminated char literal.", t.line, t.column);
@@ -229,7 +229,7 @@ namespace Brass {
         while (current() != '"' && !atEnd())
             advance();
 
-        t.value = source->substr(start, fpos - start);
+        t.value = string_view(*source).substr(start, fpos - start);
 
         if (atEnd()) {
             error("Unterminated string literal.", t.line, t.column);
@@ -260,7 +260,7 @@ namespace Brass {
             advance();
         }
 
-        t.value = source->substr(start, fpos - start);
+        t.value = string_view(*source).substr(start, fpos - start);
 
         if (atEnd()) {
             error("Unterminated string literal.", t.line, t.column);

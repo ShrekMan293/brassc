@@ -27,10 +27,6 @@
 |		|	|	|	|
 |		|	|	|	|
 |		|	|	|	|----PointerNode(*)
-|		|	|	|	|
-|		|	|	|	|
-|		|	|	|	|
-|		|	|	|	|----PointerNode(*)
 |		|
 |		|
 |		|
@@ -143,22 +139,6 @@
 |		|	|	|	|	|
 |		|	|	|	|	|
 |		|	|	|	|	|----LiteralNode({z} nig)
-|		|	|
-|		|	|
-|		|	|
-|		|	|----ReturnStmtNode(return)
-|		|	|	|
-|		|	|	|
-|		|	|	|
-|		|	|	|----BinaryExpressionNode(+)
-|		|	|	|	|
-|		|	|	|	|
-|		|	|	|	|
-|		|	|	|	|----IdentifierNode(z)
-|		|	|	|	|
-|		|	|	|	|
-|		|	|	|	|
-|		|	|	|	|----IdentifierNode(y)
 |		|	|
 |		|	|
 |		|	|
@@ -282,22 +262,6 @@
 |		|
 |		|
 |		|
-|		|----ThrowsStmtNode(throws)
-|		|	|
-|		|	|
-|		|	|
-|		|	|----ModuleAccessNode(std)
-|		|	|	|
-|		|	|	|
-|		|	|	|
-|		|	|	|----ModuleAccessNode(io)
-|		|	|	|	|
-|		|	|	|	|
-|		|	|	|	|
-|		|	|	|	|----IdentifierNode(argumentexception)
-|		|
-|		|
-|		|
 |		|----TypeNode(void)
 |		|
 |		|
@@ -323,11 +287,3 @@
 |		|	|	|	|
 |		|	|	|	|
 |		|	|	|	|----PointerNode(*)
-|		|	|	|	|
-|		|	|	|	|
-|		|	|	|	|
-|		|	|	|	|----PointerNode(*)
-|
-|
-|
-|----EndOfFileNode()

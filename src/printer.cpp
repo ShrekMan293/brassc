@@ -163,9 +163,13 @@ namespace Brass {
         colorData.print(TokenColor::Error, "ERROR: ");
         colorData.print(TokenColor::Error, msg);
 
-        print("\n  " + std::to_string(line) + " | ");
+        print("\n  " + std::to_string(line) +  " | ");
         print_code(code);
-        print("\n     | ");
+        string buf = "\n    |";
+        for (int lineBuf = line; lineBuf / 10 >= 1; lineBuf /= 10) {
+            buf.insert(buf.begin() + 1, ' ');
+        }
+        print(buf);
         for (int i = 0; i < column - 1; i++) print(" ");
         for (int i = 0; i < length; i++) 
             colorData.print(TokenColor::Error, "^");
@@ -195,7 +199,11 @@ namespace Brass {
 
         print("\n  " + std::to_string(line) + " | ");
         print_code(code);
-        print("\n     | ");
+        string buf = "\n    |";
+        for (int lineBuf = line; lineBuf / 10 >= 1; lineBuf /= 10) {
+            buf.insert(buf.begin() + 1, ' ');
+        }
+        print(buf);
         for (int i = 0; i < column - 1; i++) print(" ");
         for (int i = 0; i < length; i++) 
             colorData.print(TokenColor::Warning, "^");
@@ -227,7 +235,11 @@ namespace Brass {
 
         print("\n  " + std::to_string(line) + " | ");
         print_code(code);
-        print("\n     | ");
+        string buf = "\n    |";
+        for (int lineBuf = line; lineBuf / 10 >= 1; lineBuf /= 10) {
+            buf.insert(buf.begin() + 1, ' ');
+        }
+        print(buf);
         for (int i = 0; i < column - 1; i++) print(" ");
         for (int i = 0; i < length; i++) 
             colorData.print(TokenColor::Info, "^");
