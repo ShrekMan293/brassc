@@ -10,6 +10,10 @@ namespace Brass {
 
         public:
         collector(vector<Node>& ast);
-        std::pair<string, std::vector<std::pair<string, Symbol>>> collect();
+        std::pair<string, std::unordered_map<string, Symbol>> collect();
     };
+
+    string resolveName(Node& node);
+    void replaceAll(string& str, const string& from, const string& to);
+    vector<SymbolModifier> resolveModifiers(Node& node);
 }

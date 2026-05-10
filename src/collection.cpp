@@ -31,7 +31,7 @@ namespace Brass {
             case NodeType::MethodDeclarationNode:
                 for (auto& child : node.children) {
                     if (child.type == NodeType::TypeNode) {
-                        result += Type(child).name;
+                        result += createTypeName(child);
                         result += ".";
                         break;
                     }
@@ -55,7 +55,7 @@ namespace Brass {
                                 if (param.type == NodeType::IdentifierNode) {
                                     for (auto& type : param.children) {
                                         if (type.type == NodeType::TypeNode) {
-                                            result += Type(type).name;
+                                            result += createTypeName(type);
                                             break;
                                         }
                                     }
@@ -79,7 +79,7 @@ namespace Brass {
             case NodeType::OperatorDeclarationNode:
                 for (auto& child : node.children) {
                     if (child.type == NodeType::TypeNode) {
-                        result += Type(child).name;
+                        result += createTypeName(child);
                         result += ".";
                         result += node.enclosedToken.value;
                         break;
@@ -92,7 +92,7 @@ namespace Brass {
             case NodeType::ConstructorDeclarationNode:
                 for (auto& child : node.children) {
                     if (child.type == NodeType::TypeNode) {
-                        result += Type(child).name;
+                        result += createTypeName(child);
                     }
                     else if (child.type == NodeType::ParameterDeclarationNode) {
                         result += '(';
@@ -100,7 +100,7 @@ namespace Brass {
                             if (param.type == NodeType::IdentifierNode) {
                                 for (auto& type : param.children) {
                                     if (type.type == NodeType::TypeNode) {
-                                        result += Type(type).name;
+                                        result += createTypeName(type);
                                         break;
                                     }
                                 }
@@ -167,7 +167,7 @@ namespace Brass {
             case NodeType::OperatorDeclarationNode:
                 for (auto& child : node.children) {
                     if (child.type == NodeType::TypeNode) {
-                        symbol.type = Type(child);
+                        symbol.type = createTypeName(child);
                         break;
                     }
                 }
@@ -176,7 +176,7 @@ namespace Brass {
             case NodeType::VariableDeclarationNode:
                 for (auto& child : node.children) {
                     if (child.type == NodeType::TypeNode) {
-                        symbol.type = Type(child);
+                        symbol.type = createTypeName(child);
                         break;
                     }
                 }
@@ -186,18 +186,18 @@ namespace Brass {
             case NodeType::MethodDeclarationNode:
                 for (auto& child : node.children) {
                     if (child.type == NodeType::TypeNode) {
-                        symbol.type = Type(child);
+                        symbol.type = createTypeName(child);
                         break;
                     }
                 }
                 symbol.kind = SymbolKind::Function;
                 break;
             case NodeType::ConstructorDeclarationNode:
-                symbol.type = Type(node);
+                symbol.type = createTypeName(node);
                 symbol.kind = SymbolKind::Constructor;
                 break;
             case NodeType::DestructorDeclarationNode:
-                symbol.type = Type(node);
+                symbol.type = createTypeName(node);
                 symbol.kind = SymbolKind::Destructor;
                 break;
             default: break;
@@ -208,9 +208,9 @@ namespace Brass {
         return {name, symbol};
     }
 
-    vector<std::pair<string, Symbol>> createEnumSymbol(Node& node) {
+    unordered_map<string, Symbol> createEnumSymbol(Node& node) {
 
-        std::vector<std::pair<string, Symbol>> symbols = {};
+        std::unordered_map<string, Symbol> symbols = {};
 
         string name;
 
@@ -222,12 +222,12 @@ namespace Brass {
                 name = child.enclosedToken.value;
             }
             else if (child.type == NodeType::TypeNode) {
-                s.type = Type(child);
+                s.type = createTypeName(child);
                 break;
             }
         }
 
-        symbols.emplace_back(name, s);
+        symbols.emplace(name, s);
 
         for (auto& child : node.children) {
             if (child.type == NodeType::EnumBlockNode) {
@@ -238,7 +238,7 @@ namespace Brass {
                         enumeratorSymbol.type = s.type;
                         enumeratorSymbol.modifiers = {};
                         enumeratorSymbol.modifiers.push_back(SymbolModifier::Comptime);
-                        symbols.emplace_back(name + string(".") + string(enumerator.enclosedToken.value), enumeratorSymbol);
+                        symbols.emplace(name + string(".") + string(enumerator.enclosedToken.value), enumeratorSymbol);
                     }
                 }
             }
@@ -246,15 +246,15 @@ namespace Brass {
         return symbols;
     }
 
-    vector<std::pair<string, Symbol>> createTypeSymbol(Node& node) {
-        vector<std::pair<string, Symbol>> symbols = {};
+    unordered_map<string, Symbol> createTypeSymbol(Node& node) {
+        unordered_map<string, Symbol> symbols = {};
 
         string name;
         Symbol s;
         s.kind = SymbolKind::Type;
         s.modifiers = resolveModifiers(node);
-        s.type = Type(node);
-        symbols.emplace_back(name, s);
+        s.type = createTypeName(node);
+        symbols.emplace(name, s);
         for (auto& child : node.children) {
             if (child.type == NodeType::TypeBlockNode) {
                 for (auto& decl : child.children) {
@@ -263,12 +263,12 @@ namespace Brass {
                         fieldSymbol.kind = SymbolKind::Field;
                         for (auto& type : decl.children) {
                             if (type.type == NodeType::TypeNode) {
-                                fieldSymbol.type = Type(type);
+                                fieldSymbol.type = createTypeName(type);
                                 break;
                             }
                         }
                         fieldSymbol.modifiers = {};
-                        symbols.emplace_back(name + string(".") + string(decl.enclosedToken.value), fieldSymbol);
+                        symbols.emplace(name + string(".") + string(decl.enclosedToken.value), fieldSymbol);
                     }
                 }
             }
@@ -277,8 +277,8 @@ namespace Brass {
         return symbols;
     }
 
-    vector<std::pair<string, Symbol>> createImplSymbol(Node& node) {
-        vector<std::pair<string, Symbol>> symbols = {};
+    unordered_map<string, Symbol> createImplSymbol(Node& node) {
+        unordered_map<string, Symbol> symbols = {};
 
         string name;
         Symbol s;
@@ -289,8 +289,8 @@ namespace Brass {
                 name = child.enclosedToken.value;
             }
             else if (child.type == NodeType::TypeNode) {
-                s.type = Type(child);
-                symbols.emplace_back(name, s);
+                s.type = createTypeName(child);
+                symbols.emplace(name, s);
             }
             else if (child.type == NodeType::ImplBlockNode) {
                 for (auto& member : child.children) {
@@ -306,14 +306,13 @@ namespace Brass {
                         string buf = name + "." + resolveName(member);
                         Symbol curSym;
                         curSym.modifiers = resolveModifiers(member);
-                        std::cout << "nigger\n";
                         switch (member.type)
                         {
                             case NodeType::FunctionDeclarationNode:
                                 curSym.kind = SymbolKind::Function;
                                 for (auto& child : member.children) {
                                     if (child.type == NodeType::TypeNode) {
-                                        curSym.type = Type(child);
+                                        curSym.type = createTypeName(child);
                                         break;
                                     }
                                 }
@@ -322,7 +321,7 @@ namespace Brass {
                                 curSym.kind = SymbolKind::Field;
                                 for (auto& child : member.children) {
                                     if (child.type == NodeType::TypeNode) {
-                                        curSym.type = Type(child);
+                                        curSym.type = createTypeName(child);
                                         break;
                                     }
                                 }
@@ -333,11 +332,11 @@ namespace Brass {
                                 break;
                             case NodeType::DestructorDeclarationNode:
                                 curSym.kind = SymbolKind::Destructor;
-                                curSym.type = Type();
+                                curSym.type = "void";
                                 break;
                             default: break;
                         }
-                        symbols.emplace_back(buf, curSym);
+                        symbols.emplace(buf, curSym);
                     }
                 }
             }
@@ -346,9 +345,9 @@ namespace Brass {
         return symbols;
     }
 
-    std::pair<string, std::vector<std::pair<string, Symbol>>> collector::collect()
+    std::pair<string, std::unordered_map<string, Symbol>> collector::collect()
     {
-        std::vector<std::pair<string, Symbol>> symbols = {};
+        std::unordered_map<string, Symbol> symbols = {};
 
         for (auto& node : ast) {
             switch (node.type)
@@ -361,7 +360,7 @@ namespace Brass {
                 case NodeType::VariableDeclarationNode:
                     for (auto& child : node.children) {
                         if (child.type == NodeType::VisibilityNode && (child.enclosedToken.type == TokenType::PUBLIC || child.enclosedToken.type == TokenType::INTERNAL)) {
-                            symbols.push_back(createSymbol(node));
+                            symbols.insert(createSymbol(node));
                             break;
                         }
                     }
@@ -369,8 +368,8 @@ namespace Brass {
                 case NodeType::EnumDeclarationNode:
                     for (auto& child : node.children) {
                         if (child.type == NodeType::VisibilityNode && (child.enclosedToken.type == TokenType::PUBLIC || child.enclosedToken.type == TokenType::INTERNAL)) {
-                            std::vector<std::pair<std::string, Brass::Symbol>> enumSymbols = createEnumSymbol(node);
-                            symbols.insert(symbols.begin(), enumSymbols.begin(), enumSymbols.end());
+                            std::unordered_map<std::string, Brass::Symbol> enumSymbols = createEnumSymbol(node);
+                            symbols.insert(enumSymbols.begin(), enumSymbols.end());
                             break;
                         }
                     }
@@ -379,8 +378,8 @@ namespace Brass {
                 case NodeType::TypeDeclarationNode:
                     for (auto& child : node.children) {
                         if (child.type == NodeType::VisibilityNode && (child.enclosedToken.type == TokenType::PUBLIC || child.enclosedToken.type == TokenType::INTERNAL)) {
-                            std::vector<std::pair<std::string, Brass::Symbol>> typeSymbols = createTypeSymbol(node);
-                            symbols.insert(symbols.begin(), typeSymbols.begin(), typeSymbols.end());
+                            std::unordered_map<std::string, Brass::Symbol> typeSymbols = createTypeSymbol(node);
+                            symbols.insert(typeSymbols.begin(), typeSymbols.end());
                             break;
                         }
                     }
@@ -388,8 +387,8 @@ namespace Brass {
                 case NodeType::ImplDeclarationNode:
                     for (auto& child : node.children) {
                         if (child.type == NodeType::VisibilityNode && (child.enclosedToken.type == TokenType::PUBLIC || child.enclosedToken.type == TokenType::INTERNAL)) {
-                            std::vector<std::pair<std::string, Brass::Symbol>> implSymbols = createImplSymbol(node);
-                            symbols.insert(symbols.begin(), implSymbols.begin(), implSymbols.end());
+                            std::unordered_map<std::string, Brass::Symbol> implSymbols = createImplSymbol(node);
+                            symbols.insert(implSymbols.begin(), implSymbols.end());
                             break;
                         }
                     }

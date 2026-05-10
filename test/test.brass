@@ -19,5 +19,5 @@ public enum TokenType -> u8 {
 }
 
 internal impl Life -> void {
-    public var unmanaged bob -> Test<s32*>;
+    var unmanaged bob -> Test<s32*>;
 }

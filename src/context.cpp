@@ -1,6 +1,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "collection.hpp"
+#include "analyzer.hpp"
 
 #include <fstream>
 #include <thread>
@@ -127,7 +128,7 @@ namespace Brass {
     void BrassContext::printSymbols(unordered_map<string, vector<std::pair<string, Symbol>>> symbols) {
         for (auto& [module, syms] : symbols) {
             for (auto& [name, sym] : syms) {
-                std::cout << module << "::" << name << " - " << magic_enum::enum_name(sym.kind) << " : " << sym.type.name << " {";
+                std::cout << module << "::" << name << " - " << magic_enum::enum_name(sym.kind) << " : " << sym.type << " {";
                 for (auto& modifier : sym.modifiers) {
                     std::cout << magic_enum::enum_name(modifier) << ", ";
                 }
@@ -203,10 +204,16 @@ namespace Brass {
         return parse.parseFile();
     }
 
-    std::pair<string, std::vector<std::pair<string, Symbol>>> BrassContext::runCollection(vector<Node> ast)
+    std::pair<string, std::unordered_map<string, Symbol>> BrassContext::runCollection(vector<Node> ast)
     {
         collector collect = collector(ast);
         return collect.collect();
+    }
+
+    vector<Error> BrassContext::runAnalyzer(vector<Node> ast, unordered_map<string, std::unordered_map<string, Symbol>> collectionResults)
+    {
+        analyzer analyze = analyzer(ast, collectionResults);
+        return analyze.analyze();
     }
 
     void BrassContext::run(bool* returnTo) {
@@ -257,8 +264,8 @@ namespace Brass {
             parseResults.push_back(result.output);
         }
 
-        vector<std::future<std::pair<string, std::vector<std::pair<string, Symbol>>>>> collectionFutures;
-        unordered_map<string, std::vector<std::pair<string, Symbol>>> collectionResults;
+        vector<std::future<std::pair<std::string, std::unordered_map<std::string, Brass::Symbol>>>> collectionFutures;
+        unordered_map<string, std::unordered_map<string, Symbol>> collectionResults;
 
         for (auto& ast : parseResults) {
             collectionFutures.push_back(pool.enqueue([this, ast]() {
@@ -266,28 +273,33 @@ namespace Brass {
             }));
         }
         for (auto& future : collectionFutures) {
-            auto result = future.get(); // <---- HERE
+            auto result = future.get();
             collectionResults.insert(result);
         }
 
-        printSymbols(collectionResults);
-
-        /*
         vector<std::future<vector<Error>>> analyzeFutures;
 
         for (auto& ast : parseResults) {
-            analyzeFutures.push_back(pool.enqueue([this, ast]() {
-                return this->runAnalyzer(ast);
+            analyzeFutures.push_back(pool.enqueue([this, ast, collectionResults]() {
+                return this->runAnalyzer(ast, collectionResults);
             }));
         }
 
         for (auto& future : analyzeFutures) {
             auto result = future.get();
             for (auto& error : result) {
-                printer->error(error.file, error.message, error.line, error.column);
+                if (error.severity == ErrorType::ERR) {
+                    printer->error(error.file, error.message, error.line, error.column);
+                }
+                else if (error.severity == ErrorType::WARN) {
+                    printer->warning(error.file, error.message, error.line, error.column);
+                }
+                else {
+                    printer->note(error.file, error.message, error.line, error.column);
+                }
             }
         }
-        */
+       
     }
 
     BrassContext::BrassContext(int argc, char **argv, bool* returnTo)

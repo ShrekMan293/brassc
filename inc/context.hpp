@@ -52,7 +52,8 @@ namespace Brass {
         void printSymbols(unordered_map<string, vector<std::pair<string, Symbol>>> symbols);
         LexerResult runlexer(string file);
         Result<Node> runParser(vector<Token> tokens);
-        std::pair<string, std::vector<std::pair<string, Symbol>>> runCollection(vector<Node> ast);
+        std::pair<string, std::unordered_map<string, Symbol>> runCollection(vector<Node> ast);
+        vector<Error> runAnalyzer(vector<Node> ast, unordered_map<string, std::unordered_map<string, Symbol>> collectionResults);
 
         public:
         void run(bool* returnTo);

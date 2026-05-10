@@ -1,5 +1,5 @@
 #pragma once
-#include "type.hpp"
+#include "node.hpp"
 
 namespace Brass {
     enum class SymbolKind : uint8_t {
@@ -35,6 +35,8 @@ namespace Brass {
     struct Symbol {
         SymbolKind kind;
         vector<SymbolModifier> modifiers = {};
-        Type type;
+        string type;
     };
+
+	string createTypeName(const Node& node);
 }
