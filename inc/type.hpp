@@ -19,6 +19,7 @@ namespace Brass {
 
         Type(Node& node);
         Type(string name);
+        Type(Type* type);
         Type();
         ~Type();
     };

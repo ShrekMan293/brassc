@@ -96,7 +96,7 @@ namespace Brass {
         Token t;
         t.column = lpos;
         t.file = file;
-        int start = fpos;
+        size_t start = fpos;
         t.line = line;
 
         while (!isalnum(current()) && !std::isspace(current()) && !atEnd()) {
@@ -109,7 +109,7 @@ namespace Brass {
             t.type = getTokenFromString(string(t.value));
             if (t.type == TokenType::UNKNOWN) {
                 advance(-1);
-                t.value = string_view(*source).substr(start, 1);
+                t.value = string_view(*source).substr(start, t.value.length() - 1);
             }
             else {
                 break;

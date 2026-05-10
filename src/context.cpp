@@ -1,10 +1,11 @@
 #include "lexer.hpp"
 #include "parser.hpp"
-#include "symbol.hpp"
+#include "collection.hpp"
 
 #include <fstream>
 #include <thread>
 #include <filesystem>
+#include <algorithm>
 #include "context.hpp"
 #include "threadpool.hpp"
 #include "magic_enum/magic_enum.hpp"
@@ -123,6 +124,18 @@ namespace Brass {
         os << magic_enum::enum_name(node.type) << "(" << node.enclosedToken.value << ")";
     }
 
+    void BrassContext::printSymbols(unordered_map<string, vector<std::pair<string, Symbol>>> symbols) {
+        for (auto& [module, syms] : symbols) {
+            for (auto& [name, sym] : syms) {
+                std::cout << module << "::" << name << " - " << magic_enum::enum_name(sym.kind) << " : " << sym.type.name << " {";
+                for (auto& modifier : sym.modifiers) {
+                    std::cout << magic_enum::enum_name(modifier) << ", ";
+                }
+                std::cout << "}\n";
+            }
+        }
+    }
+
     void BrassContext::printNode(std::ofstream& ofs, Node node, int indent, vector<int> stops) {
         if (indent == 0) {
             ofs << "|\n|\n|\n|----";
@@ -190,6 +203,12 @@ namespace Brass {
         return parse.parseFile();
     }
 
+    std::pair<string, std::vector<std::pair<string, Symbol>>> BrassContext::runCollection(vector<Node> ast)
+    {
+        collector collect = collector(ast);
+        return collect.collect();
+    }
+
     void BrassContext::run(bool* returnTo) {
         ThreadPool pool = ThreadPool();
         vector<std::future<LexerResult>> lexFutures;
@@ -237,6 +256,38 @@ namespace Brass {
 
             parseResults.push_back(result.output);
         }
+
+        vector<std::future<std::pair<string, std::vector<std::pair<string, Symbol>>>>> collectionFutures;
+        unordered_map<string, std::vector<std::pair<string, Symbol>>> collectionResults;
+
+        for (auto& ast : parseResults) {
+            collectionFutures.push_back(pool.enqueue([this, ast]() {
+                return this->runCollection(ast);
+            }));
+        }
+        for (auto& future : collectionFutures) {
+            auto result = future.get(); // <---- HERE
+            collectionResults.insert(result);
+        }
+
+        printSymbols(collectionResults);
+
+        /*
+        vector<std::future<vector<Error>>> analyzeFutures;
+
+        for (auto& ast : parseResults) {
+            analyzeFutures.push_back(pool.enqueue([this, ast]() {
+                return this->runAnalyzer(ast);
+            }));
+        }
+
+        for (auto& future : analyzeFutures) {
+            auto result = future.get();
+            for (auto& error : result) {
+                printer->error(error.file, error.message, error.line, error.column);
+            }
+        }
+        */
     }
 
     BrassContext::BrassContext(int argc, char **argv, bool* returnTo)
@@ -280,6 +331,7 @@ namespace Brass {
         for (auto& arg : files) {
             BrassFile file;
             file.path = arg;
+            std::ranges::replace(file.path, '\\', '/');
             file.source = ReadFile(arg, returnTo);
 
             if (*returnTo) return;

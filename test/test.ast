@@ -6,6 +6,10 @@
 |		|
 |		|
 |		|
+|		|----VisibilityNode(public)
+|		|
+|		|
+|		|
 |		|----ParameterDeclarationNode(()
 |		|	|
 |		|	|
@@ -23,6 +27,10 @@
 |		|	|	|
 |		|	|	|
 |		|	|	|----TypeNode(char)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----PointerNode(*)
 |		|	|	|	|
 |		|	|	|	|
 |		|	|	|	|
@@ -142,6 +150,22 @@
 |		|	|
 |		|	|
 |		|	|
+|		|	|----ReturnStmtNode(return)
+|		|	|	|
+|		|	|	|
+|		|	|	|
+|		|	|	|----BinaryExpressionNode(+)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----IdentifierNode(z)
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|
+|		|	|	|	|----IdentifierNode(y)
+|		|	|
+|		|	|
+|		|	|
 |		|	|----IfElseBlockNode(if)
 |		|	|	|
 |		|	|	|
@@ -234,6 +258,10 @@
 |		|
 |		|
 |		|
+|		|----VisibilityNode(public)
+|		|
+|		|
+|		|
 |		|----IdentifierNode(TokenType)
 |		|
 |		|
@@ -258,6 +286,10 @@
 |		|
 |		|
 |		|
+|		|----VisibilityNode(internal)
+|		|
+|		|
+|		|
 |		|----IdentifierNode(Life)
 |		|
 |		|
@@ -274,6 +306,10 @@
 |		|	|	|
 |		|	|	|
 |		|	|	|
+|		|	|	|----VisibilityNode(public)
+|		|	|	|
+|		|	|	|
+|		|	|	|
 |		|	|	|----VariableModifierNode(unmanaged)
 |		|	|	|
 |		|	|	|
@@ -282,8 +318,16 @@
 |		|	|	|
 |		|	|	|
 |		|	|	|
-|		|	|	|----TypeNode(s32)
+|		|	|	|----TypeNode(Test)
 |		|	|	|	|
 |		|	|	|	|
 |		|	|	|	|
-|		|	|	|	|----PointerNode(*)
+|		|	|	|	|----GenericReferenceNode(s32)
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|
+|		|	|	|	|	|----TypeNode(s32)
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|
+|		|	|	|	|	|	|----PointerNode(*)

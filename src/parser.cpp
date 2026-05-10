@@ -44,7 +44,21 @@ namespace Brass {
                 visibility->enclosedToken = current();
                 visibility->type = NodeType::VisibilityNode;
                 advance();
-                [[fallthrough]];
+                switch (current()) {
+                    case TokenType::FN: return parseFunctionDecl(visibility, result);
+                    case TokenType::VAR: return parseVarDecl(visibility, result);
+                    case TokenType::TYPE: return parseTypeDecl(visibility);
+                    case TokenType::ENUM: return parseEnumDecl(visibility);
+                    case TokenType::IMPL: return parseImplDecl(visibility);
+                    case TokenType::OPERATOR: return parseOperatorDecl(visibility);
+                    case TokenType::IDENTIFIER: return parseConstructorDecl(visibility, result);
+                    case TokenType::BIN_NOT: return parseDestructorDecl(visibility, result);
+                    case TokenType::EXCEPTION: return parseExceptionDecl(visibility);
+                    case TokenType::USING: return parseUsingStmt();
+                    default:
+                        throw ParseError("Unexpected token as top level statement.", current().line, current().column, true, 0);
+                    }
+                break;
             case TokenType::FN: return parseFunctionDecl(visibility, result);
             case TokenType::VAR: return parseVarDecl(visibility, result);
             case TokenType::TYPE: return parseTypeDecl(visibility);
@@ -478,8 +492,8 @@ namespace Brass {
         Node decl = makeCurrentNode(NodeType::ImplBlockNode);
         advance();
 
+        Node* visibility = nullptr;
         while (current() != TokenType::RBRACE && !atEnd()) {
-            Node* visibility = nullptr;
             switch (current())
             {
             case TokenType::PUBLIC:
@@ -491,7 +505,7 @@ namespace Brass {
                 visibility->enclosedToken = current();
                 visibility->type = NodeType::VisibilityNode;
                 advance();
-                [[fallthrough]];
+                continue;
             case TokenType::FN: parseFunctionDecl(visibility, decl.children); break;
             case TokenType::VAR: parseVarDecl(visibility, decl.children); break;
             case TokenType::IDENTIFIER: parseConstructorDecl(visibility, decl.children); break;
@@ -499,6 +513,7 @@ namespace Brass {
             default:
                 throw ParseError("Unexpected token as impl statement.", current().line, current().column, false, blockDepth);
             }
+            visibility = nullptr;
         }
 
         if (atEnd()) {
@@ -607,23 +622,7 @@ namespace Brass {
         Node decl = makeCurrentNode(NodeType::ConstructorDeclarationNode);
         if (visibility != nullptr) decl.children.push_back(*visibility);
 
-        if (peek() == TokenType::LESS) {
-            advance();
-            Node generic = makeCurrentNode(NodeType::GenericDeclarationNode);
-            do {
-                expect(TokenType::IDENTIFIER);
-                generic.children.push_back(makeCurrentNode(NodeType::IdentifierNode));
-                if (peek() == TokenType::COMMA) {
-                    advance(2);
-                    if (current() == TokenType::GREATER) {
-                        throw ParseError("Expected type following ','.", current().line, current().column, false, blockDepth);
-                    }
-                }
-            } while (current() != TokenType::GREATER);
-            advance();
-
-            decl.children.push_back(generic);
-        }
+        decl.children.push_back(parseType());
 
         expect(TokenType::LPAREN);
         Node parameterNode = makeCurrentNode(NodeType::ParameterDeclarationNode);
@@ -683,23 +682,7 @@ namespace Brass {
         Node decl = makeCurrentNode(NodeType::DestructorDeclarationNode);
         if (visibility != nullptr) decl.children.push_back(*visibility);
 
-        if (peek() == TokenType::LESS) {
-            advance();
-            Node generic = makeCurrentNode(NodeType::GenericDeclarationNode);
-            do {
-                expect(TokenType::IDENTIFIER);
-                generic.children.push_back(makeCurrentNode(NodeType::IdentifierNode));
-                if (peek() == TokenType::COMMA) {
-                    advance(2);
-                    if (current() == TokenType::GREATER) {
-                        throw ParseError("Expected type following ','.", current().line, current().column, false, blockDepth);
-                    }
-                }
-            } while (current() != TokenType::GREATER);
-            advance();
-
-            decl.children.push_back(generic);
-        }
+        decl.children.push_back(parseType());
 
         expect(TokenType::LPAREN);
         Node parameterNode = makeCurrentNode(NodeType::ParameterDeclarationNode);
@@ -1060,7 +1043,8 @@ namespace Brass {
                         throw ParseError("Expected type following ','.", current().line, current().column, false, blockDepth);
                     }
                 }
-            } while (current() != TokenType::GREATER);
+            } while (peek() != TokenType::GREATER);
+            advance();
             parent.children.push_back(generic);
         }
         while (peek() == TokenType::STAR) {

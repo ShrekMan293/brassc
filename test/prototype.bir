@@ -1,0 +1,298 @@
+Gonna kill assign, I just realized it is doing the same as store
+
+Unoptimized:
+
+sum_evens:
+    decl ptr, u64*
+    store ptr, arg0
+    decl len, u64
+    store len, arg1
+
+    decl sum, u64
+    store sum, 0
+    decl i, u64
+    store i, 0
+
+    cond0:
+        load t0, i
+        load t1, len
+        lt t2, t0, t1
+        branch t2, br0, join0
+    
+    br0:
+        decl val, u64
+        load t0, i
+        mul t1, t0, 8
+        load t2, ptr
+        add t3, t1, t2
+        deref t4, t3
+        store val, t4
+
+        br0cond0:
+            load t5, val
+            mod t6, t5, 2
+            equ t7, t6, 0
+            branch t7, br0br0, br0join0
+
+        br0br0:
+            load t5, sum
+            load t6, val
+            add t7, t5, t6
+            store sum, t7
+            branch br0join0
+
+        br0join0:
+            load t5, i
+            add t6, t5, 1
+            store i, t6
+            branch cond0
+        branch cond0    // Unreachable but must satisfy branch requirements
+        
+    join0:
+        load t0, sum
+        ret t0
+    ret // Unreachable
+
+main:
+    decl arr, 40 // Sizeof u64 (8) * 5
+    load t0, 3
+    mul t1, 8 * 0
+    load t2, arr
+    add t3, t2, t1
+    store t3, t0
+    
+    load t4, 6
+    mul t5, 8 * 1
+    load t6, arr
+    add t7, t6, t5
+    store t7, t4
+
+    load t8, 9
+    mul t9, 8 * 2
+    load t10, arr
+    add t11, t10, t9
+    store t11, t8
+
+    load t12, 12
+    mul t13, 8 * 3
+    load t14, arr
+    add t15, t14, t13
+    store t15, t12
+
+    load t16, 15
+    mul t17, 8 * 4
+    load t18, arr
+    add t19, t18, t17
+    store t19, t16
+
+    decl result, u64
+    load arg0, arr
+    load arg1, 5
+    call t20, sum_evens
+    store result, t20
+
+    cond0:
+        load t21, result
+        gt t22, t21, 10
+        branch t22, br0, br1
+    
+    br0:
+        load arg0, result
+        call print
+        branch join0
+    br1:
+        load arg0, 0
+        call print
+        branch join0
+
+    join0:
+        ret 0
+    ret // Unreachable
+
+78 lines
+
+Optimized Passively (only redundant instructions, keep semantic shape):
+
+sum_evens:
+    decl ptr, u64*
+    store ptr, arg0
+    decl len, u64
+    store len, arg1
+    load t1, arg1
+
+    decl sum, u64
+    store sum, 0
+
+    decl i, u64
+    load t0, 0
+    store i, 0
+    branch br0
+
+    cond0:
+        lt t2, t0, t1
+        branch t2, br0, join0
+    
+    br0:
+        decl val, u64
+        mul t2, t0, 8
+        load t3, ptr
+        add t4, t2, t3
+        deref t5, t4
+        store val, t5
+
+        br0cond0:
+            load t6, val
+            mod t7, t6, 2
+            branch t7, br0br0, br0join0
+
+        br0br0:
+            load t6, sum
+            load t7, val
+            add t8, t6, t7
+            store sum, t8
+            branch br0join0
+
+        br0join0:
+            inc t0
+            store i, t0
+            branch cond0
+        branch cond0    // Unreachable but must satisfy branch requirements
+        
+    join0:
+        load t0, sum
+        ret t0
+
+main:
+    decl arr, 40 // Sizeof u64 (8) * 5
+    load t0, arr
+    load t1, 3
+    load t2, 0
+    add t2, 8
+    add t2, t2, t0
+    store t2, t1
+    
+    load t1, 6
+    add t2, 8
+    store t2, t1
+    
+    load t1, 9
+    add t2, 8
+    store t2, t1
+    
+    load t1, 12
+    add t2, 8
+    store t2, t1
+    
+    load t1, 15
+    add t2, 8
+    store t2, t1
+
+    decl result, u64
+    load arg0, arr
+    load arg1, 5
+    call t3, sum_evens
+    store result, t3
+
+    cond0:
+        gt t4, t3, 10
+        branch t4, br0, br1
+    
+    br0:
+        load arg0, result
+        branch join0
+    br1:
+        load arg0, 0
+        branch join0
+
+    join0:
+        call print
+        ret 0
+    ret // Unreachable
+
+78 lines -> 70 lines
+
+Optimized Aggressively:
+
+sum_evens:
+    decl ptr, u64*
+    store ptr, arg0
+    load t0, arg1 // Optimize len away
+
+    load t1, sum    // Optimize sum away
+
+    load t2, 0  // Optimize i completely away
+    branch br0
+
+    cond0:
+        lt t3, t2, t0
+        branch t3, br0, join0
+    
+    br0:
+        mul t3, t0, 8
+        load t4, ptr
+        add t4, t4, t3
+        deref t5, t4    // Optimize val away
+
+        br0cond0:
+            mod t6, t5, 2
+            branch t6, br0br0, br0join0
+
+        br0br0:
+            add t1, t1, t5
+            branch br0join0
+
+        br0join0:
+            inc t1
+            branch cond0
+        branch cond0    // Unreachable but must satisfy branch requirements
+        
+    join0:
+        ret t1
+
+main:
+    decl arr, 40 // Sizeof u64 (8) * 5
+    load t0, arr
+    load t1, 3
+    load t2, 0
+    add t2, t2, t0
+    store t2, t1
+    
+    load t1, 6
+    add t2, 8
+    store t2, t1
+    
+    load t1, 9
+    add t2, 8
+    store t2, t1
+    
+    load t1, 12
+    add t2, 8
+    store t2, t1
+    
+    load t1, 15
+    add t2, 8
+    store t2, t1
+
+    load arg0, arr
+    load arg1, 5
+    call t3, sum_evens  // Optimize result away
+
+    cond0:
+        gt t4, t3, 10
+        branch t4, br0, br1
+    
+    br0:
+        load arg0, t3
+        branch join0
+    br1:
+        xor arg0, arg0, arg0
+        branch join0
+
+    join0:
+        call print
+        ret 0
+    ret // Unreachable
+
+78 lines -> 50 lines
+
+And I realize my middle optimization was kinda shitty, but no big deal

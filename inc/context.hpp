@@ -17,7 +17,7 @@ namespace Brass {
         string printTokens = "";
         string printAST = "";
         vector<string> libDirs = {};
-        vector<string> libraries = {"std"};
+        vector<string> libraries = {};
         void* argList;
     };
 
@@ -49,8 +49,10 @@ namespace Brass {
         void printTree(vector<Node> ast);
         void printNode(std::ofstream& ofs, Node node, int indent=0, vector<int> stops={});
         void outNode(std::ostream& os, Node node);
+        void printSymbols(unordered_map<string, vector<std::pair<string, Symbol>>> symbols);
         LexerResult runlexer(string file);
         Result<Node> runParser(vector<Token> tokens);
+        std::pair<string, std::vector<std::pair<string, Symbol>>> runCollection(vector<Node> ast);
 
         public:
         void run(bool* returnTo);

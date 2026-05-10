@@ -1,4 +1,4 @@
-fn main(argc -> int, argv -> char**) -> void {
+public fn main(argc -> int, argv -> char**) -> void {
     var y -> u8 = 0x4;
     var z -> u8 = 0b1001;
     var y -> string = "dragon\n";
@@ -14,10 +14,10 @@ fn main(argc -> int, argv -> char**) -> void {
     }
 }
 
-enum TokenType -> u8 {
+public enum TokenType -> u8 {
     LPAREN, RPAREN
 }
 
-impl Life -> void {
-    var unmanaged bob -> s32**;
+internal impl Life -> void {
+    public var unmanaged bob -> Test<s32*>;
 }
